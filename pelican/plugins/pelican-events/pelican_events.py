@@ -1,9 +1,9 @@
 #!python
 """
-events plugin for Pelican
+pelican_events plugin for Pelican
 =========================
 
-This plugin looks for and parses an "events" directory and generates
+This plugin looks for and parses an "pelican_events" directory and generates
 blog posts with a user-defined event date. (typically in the future)
 It also generates an ICalendar v2.0 calendar file.
 https://en.wikipedia.org/wiki/ICalendar
@@ -11,22 +11,21 @@ https://en.wikipedia.org/wiki/ICalendar
 
 original 2014 events plugin by Federico Ceratto
 updated in 2021 by Makerspace Esslingen
-converted in 2025 to updated Pelican Plugins format by Ian Kluft for Portland Linux Kernel Meetup  # noqa: E501
+converted in 2025 to Namespace plugin by Ian Kluft for Portland Linux Kernel Meetup
 Released under AGPLv3+ license, see LICENSE
 """
-
-from dateutil import rrule
-from recurrent.event_parser import RecurringEvent
-from datetime import datetime, timedelta, timezone
-from pelican import signals, utils, contents
-from collections import namedtuple, defaultdict
-from html.parser import HTMLParser
-import icalendar
 from io import StringIO
 import logging
 import os.path
+from datetime import datetime, timedelta, timezone
+from html.parser import HTMLParser
+from dateutil import rrule
+import icalendar
+from recurrent.event_parser import RecurringEvent
 import pytz
 import re
+from pelican import signals, utils, contents
+from collections import namedtuple, defaultdict
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ class MLStripper(HTMLParser):
         super().__init__()
         self.reset()
         self.strict = False
-        self.convert_charrefs= True
+        self.convert_charrefs = True
         self.text = StringIO()
     def handle_data(self, d):
         self.text.write(d)
@@ -71,7 +70,7 @@ def parse_tstamp(metadata, field_name):
         return datetime.strptime(metadata[field_name], '%Y-%m-%d %H:%M').astimezone()
     except Exception as e:
         log.error("Unable to parse the '%s' field in the event named '%s': %s" \
-            % (field_name, metadata['title'], e))
+                  % (field_name, metadata['title'], e))
         raise
 
 
@@ -98,8 +97,6 @@ are: '%s'.""" % (c, metadata['title'], ' '.join(TIME_MULTIPLIERS)))
             log.error("""Unable to parse '%s' value in the 'event-duration' \
 field in the '%s' event.""" % (c, metadata['title']))
             raise ValueError("Unable to parse '%s'" % c)
-
-
     return timedelta(**tdargs)
 
 
@@ -107,7 +104,7 @@ def basic_utc_isoformat(datetime_value):
     utc_datetime = datetime_value.astimezone(timezone.utc)
     pure_datetime = utc_datetime.replace(tzinfo=None)
     iso_timestamp = pure_datetime.isoformat(timespec='seconds')
-    stripped_iso_timestamp = iso_timestamp.replace('-','').replace(':', '')
+    stripped_iso_timestamp = iso_timestamp.replace('-', '').replace(':', '')
 
     return stripped_iso_timestamp + 'Z'
 
@@ -140,7 +137,7 @@ def parse_article(content):
 
     content.event_plugin_data = {"dtstart": dtstart, "dtend": dtend}
 
-    if not 'status' in content.metadata or content.metadata['status'] != 'draft':
+    if 'status' not in content.metadata or content.metadata['status'] != 'draft':
         events.append(content)
 
 
@@ -152,7 +149,7 @@ def insert_recurring_events(generator):
         __setattr__ = dict.__setitem__
         __delattr__ = dict.__delitem__
 
-    if not 'recurring_events' in generator.settings['PLUGIN_EVENTS']:
+    if 'recurring_events' not in generator.settings['PLUGIN_EVENTS']:
         return
 
     for event in generator.settings['PLUGIN_EVENTS']['recurring_events']:
@@ -171,7 +168,7 @@ def insert_recurring_events(generator):
                 'title': event['title'],
                 'summary': event['summary'],
                 'date': next_occurrence,
-                'event-location' : event['location']
+                'event-location': event['location']
             }),
             'event_plugin_data': dict({
                 'dtstart': next_occurrence.astimezone(),
@@ -240,23 +237,30 @@ def generate_localized_events(generator):
 
 
 def populate_context_variables(generator):
-    """Populate the event_list and upcoming_events_list variables to be used in jinja templates"""
+    """
+    Populate the event_list and upcoming_events_list variables to be used in jinja templates
+    """
 
     filter_future = lambda ev: ev.event_plugin_data["dtend"].date() >= datetime.now().date()
 
     if not localized_events:
-        generator.context['events_list'] = sorted(events, reverse = True,
-                                                  key=lambda ev: (ev.event_plugin_data["dtstart"], ev.event_plugin_data["dtend"]))
+        generator.context['events_list'] = sorted(events, reverse=True,
+                                                  key=lambda ev: (ev.event_plugin_data["dtstart"],
+                                                                  ev.event_plugin_data["dtend"]))
         generator.context['upcoming_events_list'] = sorted(filter(filter_future, events),
-                                                  key=lambda ev: (ev.event_plugin_data["dtstart"], ev.event_plugin_data["dtend"]))
+                                                           key=lambda ev: (ev.event_plugin_data["dtstart"],
+                                                                           ev.event_plugin_data["dtend"]))
     else:
-        generator.context['events_list'] = {k: sorted(v, reverse = True,
-                                                      key=lambda ev: (ev.event_plugin_data["dtstart"], ev.event_plugin_data["dtend"]))
+        generator.context['events_list'] = {k: sorted(v, reverse=True,
+                                                      key=lambda ev: (ev.event_plugin_data["dtstart"],
+                                                                      ev.event_plugin_data["dtend"]))
                                             for k, v in localized_events.items()}
 
         generator.context['upcoming_events_list'] = {k: sorted(filter(filter_future, v),
-                                                      key=lambda ev: (ev.event_plugin_data["dtstart"], ev.event_plugin_data["dtend"]))
-                                            for k, v in localized_events.items()}
+                                                     key=lambda ev: (ev.event_plugin_data["dtstart"],
+                                                                     ev.event_plugin_data["dtend"]))
+                                                     for k, v in localized_events.items()}
+
 
 def initialize_events(article_generator):
     """
