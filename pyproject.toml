@@ -2,10 +2,10 @@
 name = "pelican-events"
 version = "0.0.1"
 description = "iCalendar events plugin for Pelican"
-authors = [({name = "Ian Kluft", email = "ko6yq.dev+python@gmail.com"})]
+authors = [{name = "Ian Kluft", email = "ko6yq.dev+python@gmail.com"}]
 license = {text = "AGPL-3.0"}
 readme = "README.md"
-keywords = [("pelican", "plugin", "icalendar", "events")]
+keywords = ["pelican", "plugin", "icalendar", "events"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Environment :: Console",
