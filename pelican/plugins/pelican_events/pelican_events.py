@@ -1,7 +1,4 @@
-#!python
-"""
-pelican_events plugin for Pelican
-=========================
+"""pelican_events plugin for Pelican.
 
 This plugin looks for and parses an "pelican_events" directory and generates
 blog posts with a user-defined event date. (typically in the future)
@@ -48,8 +45,10 @@ class MLStripper(HTMLParser):
         self.strict = False
         self.convert_charrefs = True
         self.text = StringIO()
+
     def handle_data(self, d):
         self.text.write(d)
+
     def get_data(self):
         return self.text.getvalue()
 
@@ -271,6 +270,7 @@ def initialize_events(article_generator):
     del events[:]
     localized_events.clear()
     insert_recurring_events(article_generator)
+
 
 def register():
     signals.article_generator_init.connect(initialize_events)
