@@ -11,18 +11,20 @@ updated in 2021 by Makerspace Esslingen
 converted in 2025 to Namespace plugin by Ian Kluft for Portland Linux Kernel Meetup
 Released under AGPLv3+ license, see LICENSE
 """
+from typing import Any
+from collections import defaultdict
+from datetime import UTC, datetime, timedelta
+from html.parser import HTMLParser
 from io import StringIO
 import logging
 import os.path
-from datetime import datetime, timedelta, timezone
-from html.parser import HTMLParser
+from pprint import pformat
+
 from dateutil import rrule
 import icalendar
 from recurrent.event_parser import RecurringEvent
-import pytz
-import re
-from pelican import signals, utils, contents
-from collections import namedtuple, defaultdict
+
+from pelican import contents, signals
 
 log = logging.getLogger(__name__)
 
@@ -79,7 +81,6 @@ def parse_timedelta(metadata):
 
     :returns: timedelta
     """
-
     chunks = metadata['event-duration'].split()
     tdargs = {}
     for c in chunks:
@@ -100,7 +101,7 @@ field in the '%s' event.""" % (c, metadata['title']))
 
 
 def basic_utc_isoformat(datetime_value):
-    utc_datetime = datetime_value.astimezone(timezone.utc)
+    utc_datetime = datetime_value.astimezone(UTC)
     pure_datetime = utc_datetime.replace(tzinfo=None)
     iso_timestamp = pure_datetime.isoformat(timespec='seconds')
     stripped_iso_timestamp = iso_timestamp.replace('-', '').replace(':', '')
@@ -163,23 +164,35 @@ def insert_recurring_events(generator):
         event = AttributeDict({
             'url': f"pages/{event['page_url']}",
             'location': event['location'],
-            'metadata': dict({
+            'metadata': {
                 'title': event['title'],
                 'summary': event['summary'],
                 'date': next_occurrence,
                 'event-location': event['location']
-            }),
-            'event_plugin_data': dict({
+            },
+            'event_plugin_data': {
                 'dtstart': next_occurrence.astimezone(),
                 'dtend': next_occurrence.astimezone() + event_duration,
-            })
+            }
         })
         events.append(event)
 
 
+def xfer_metadata_to_event(metadata: dict[str, Any] | None, event: icalendar.cal.Event) -> None:
+    """Copy event-related metadata into the event structure."""
+    if not metadata:
+        return
+    # process all metadata prefixed with event- and add them to the iCalendar event
+    # this allows flexible control of fields from RFC5545 and related standards
+    for field in iter(metadata):
+        if field.lower().startswith("event-"):
+            fname = field[6:].lower()
+            if fname not in ["start", "end", "duration"]:
+                event.add(fname.lower(), metadata[field])
+
+
 def generate_ical_file(generator):
-    """Generate an iCalendar file
-    """
+    """Generate an iCalendar file."""
     global events
     ics_fname = generator.settings['PLUGIN_EVENTS']['ics_fname']
     if not ics_fname:
@@ -192,7 +205,7 @@ def generate_ical_file(generator):
         metadata_field_for_event_summary = 'summary'
 
     ics_fname = os.path.join(generator.settings['OUTPUT_PATH'], ics_fname)
-    log.debug("Generating calendar at %s with %d events" % (ics_fname, len(events)))
+    log.debug("Generating calendar at %s with %d events", ics_fname, len(events))
 
     ical = icalendar.Calendar()
     ical.add('prodid', '-//My calendar product//mxm.dk//')
@@ -212,8 +225,9 @@ def generate_ical_file(generator):
             priority=5,
             uid=generator.settings['SITEURL'] + e.url,
         )
-        if 'event-location' in e.metadata:
-            icalendar_event.add('location', e.metadata['event-location'])
+        # copy event- prefixed fields to icalendar object
+        xfer_metadata_to_event(e.metadata, icalendar_event)
+        log.debug("Added icalendar event: %s", pformat(icalendar_event))
 
         ical.add_component(icalendar_event)
 
@@ -222,8 +236,7 @@ def generate_ical_file(generator):
 
 
 def generate_localized_events(generator):
-    """ Generates localized events dict if i18n_subsites plugin is active """
-
+    """Generates localized events dict if i18n_subsites plugin is active."""
     if "i18n_subsites" in generator.settings["PLUGINS"]:
         if not os.path.exists(generator.settings['OUTPUT_PATH']):
             os.makedirs(generator.settings['OUTPUT_PATH'])
@@ -236,10 +249,8 @@ def generate_localized_events(generator):
 
 
 def populate_context_variables(generator):
+    """Populate the event_list and upcoming_events_list variables to be used in jinja templates
     """
-    Populate the event_list and upcoming_events_list variables to be used in jinja templates
-    """
-
     filter_future = lambda ev: ev.event_plugin_data["dtend"].date() >= datetime.now().date()
 
     if not localized_events:
@@ -262,11 +273,9 @@ def populate_context_variables(generator):
 
 
 def initialize_events(article_generator):
-    """
-    Clears the events list before generating articles to properly support plugins with
+    """Clears the events list before generating articles to properly support plugins with
     multiple generation passes like i18n_subsites
     """
-
     del events[:]
     localized_events.clear()
     insert_recurring_events(article_generator)
