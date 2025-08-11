@@ -12,19 +12,22 @@ converted in 2025 to Namespace plugin by Ian Kluft for Portland Linux Kernel Mee
 Released under AGPLv3+ license, see LICENSE
 """
 from collections import defaultdict
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
 from html.parser import HTMLParser
 from io import StringIO
 import logging
 import os.path
 from pprint import pformat
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from dateutil import rrule
+import dateutil.parser
 import icalendar
 from recurrent.event_parser import RecurringEvent
 
 from pelican import contents, signals
+from pelican.settings import Settings
 
 log = logging.getLogger(__name__)
 
@@ -64,26 +67,25 @@ def strip_html_tags(html):
     return s.get_data()
 
 
-def parse_tstamp(metadata, field_name):
-    """Parse a timestamp string in format "YYYY-MM-DD HH:MM"
+def get_tz(settings: Settings) -> None:
+    """Get site time zone from PLUGIN_EVENTS.timezone. If found, override the default UTC."""
+    return ZoneInfo(settings['PLUGIN_EVENTS'].get('timezone', 'UTC'))
 
-    :returns: datetime
-    """
+
+def parse_tstamp(metadata: dict[str, Any] | None, field_name: str, tz: tzinfo) -> datetime:
+    """Parse a timestamp string in format YYYY-MM-DD HH:MM."""
+    if isinstance(metadata[field_name], datetime):
+        return datetime.fromisoformat(metadata[field_name].isoformat()).replace(tzinfo=tz)
     try:
-        # assume local system timezone when parsing datetime
-        return datetime.strptime(metadata[field_name], '%Y-%m-%d %H:%M').astimezone()
+        # return datetime.strptime(metadata[field_name], '%Y-%m-%d %H:%M').replace(tzinfo=tz)
+        return dateutil.parser.parse(metadata[field_name]).replace(tzinfo=tz)
     except Exception as e:
-        log.error("Unable to parse the '%s' field in the event named '%s': %s" \
-                  % (field_name, metadata['title'], e))
-        raise
+        title = metadata['title']
+        raise ValueError(f"Unable to parse the '{field_name}' field in the event named '{title}': {e}") from e
 
 
-def parse_timedelta(metadata):
-    """Parse a timedelta string in format [<num><multiplier> ]*
-    e.g. 2h 30m
-
-    :returns: timedelta
-    """
+def parse_timedelta(metadata) -> timedelta:
+    """Parse a timedelta string in format [<num><multiplier> ]* e.g. 2h 30m."""
     chunks = metadata['event-duration'].split()
     tdargs = {}
     for c in chunks:
@@ -91,52 +93,40 @@ def parse_timedelta(metadata):
             m = TIME_MULTIPLIERS[c[-1]]
             val = float(c[:-1])
             tdargs[m] = val
-        except KeyError:
-            log.error("""Unknown time multiplier '%s' value in the \
+        except KeyError as e:
+            log.exception("""Unknown time multiplier '%s' value in the \
 'event-duration' field in the '%s' event. Supported multipliers \
-are: '%s'.""" % (c, metadata['title'], ' '.join(TIME_MULTIPLIERS)))
-            raise RuntimeError("Unknown time multiplier '%s'" % c)
-        except ValueError:
-            log.error("""Unable to parse '%s' value in the 'event-duration' \
-field in the '%s' event.""" % (c, metadata['title']))
-            raise ValueError("Unable to parse '%s'" % c)
+are: '%s'.""", c, metadata['title'], ' '.join(TIME_MULTIPLIERS))
+            raise RuntimeError(f"Unknown time multiplier '{c}'") from e
+        except ValueError as e:
+            log.exception("""Unable to parse '%s' value in the 'event-duration' \
+field in the '%s' event.""", c, metadata['title'])
+            raise ValueError(f"Unable to parse '{c}'") from e
     return timedelta(**tdargs)
 
 
-def basic_utc_isoformat(datetime_value):
-    utc_datetime = datetime_value.astimezone(UTC)
-    pure_datetime = utc_datetime.replace(tzinfo=None)
-    iso_timestamp = pure_datetime.isoformat(timespec='seconds')
-    stripped_iso_timestamp = iso_timestamp.replace('-', '').replace(':', '')
-
-    return stripped_iso_timestamp + 'Z'
-
-
-def parse_article(content):
-    """Collect articles metadata to be used for building the event calendar.
-
-    :returns: None
-    """
+def parse_article(content) -> None:
+    """Collect articles metadata to be used for building the event calendar."""
     if not isinstance(content, contents.Article):
         return
 
     if 'event-start' not in content.metadata:
         return
 
-    dtstart = parse_tstamp(content.metadata, 'event-start')
+    site_tz = get_tz(content.settings)
+    dtstart = parse_tstamp(content.metadata, 'event-start', site_tz)
+    dtend = dtstart  # placeholder defaults to zero duration until overridden
 
     if 'event-end' in content.metadata:
-        dtend = parse_tstamp(content.metadata, 'event-end')
+        dtend = parse_tstamp(content.metadata, 'event-end', site_tz)
 
     elif 'event-duration' in content.metadata:
         dtdelta = parse_timedelta(content.metadata)
         dtend = dtstart + dtdelta
 
     else:
-        msg = "Either 'event-end' or 'event-duration' must be" + \
-            " speciefied in the event named '%s'" % content.metadata['title']
-        log.error(msg)
-        raise ValueError(msg)
+        log.error("Either 'event-end' or 'event-duration' must be specified in the event named '%s'",
+                  content.metadata['title'])
 
     content.event_plugin_data = {"dtstart": dtstart, "dtend": dtend}
 
@@ -155,16 +145,17 @@ def insert_recurring_events(generator):
     if 'recurring_events' not in generator.settings['PLUGIN_EVENTS']:
         return
 
+    site_tz = get_tz(generator.settings)
     for event in generator.settings['PLUGIN_EVENTS']['recurring_events']:
         recurring_rule = event['recurring_rule']
-        r = RecurringEvent(now_date=datetime.now())
+        r = RecurringEvent(now_date=datetime.now(tz=site_tz))
         r.parse(recurring_rule)
         rr = rrule.rrulestr(r.get_RFC_rrule())
-        next_occurrence = rr.after(datetime.now())
+        next_occurrence = rr.after(datetime.now(tz=site_tz))
 
         event_duration = parse_timedelta(event)
 
-        event = AttributeDict({
+        gen_event = AttributeDict({
             'url': f"pages/{event['page_url']}",
             'location': event['location'],
             'metadata': {
@@ -174,11 +165,11 @@ def insert_recurring_events(generator):
                 'event-location': event['location']
             },
             'event_plugin_data': {
-                'dtstart': next_occurrence.astimezone(),
-                'dtend': next_occurrence.astimezone() + event_duration,
+                'dtstart': next_occurrence.astimezone(site_tz),
+                'dtend': next_occurrence.astimezone(site_tz) + event_duration,
             }
         })
-        events.append(event)
+        events.append(gen_event)
 
 
 def xfer_metadata_to_event(metadata: dict[str, Any] | None, event: icalendar.cal.Event) -> None:
@@ -214,17 +205,22 @@ def generate_ical_file(generator):
     ical.add('prodid', '-//My calendar product//mxm.dk//')
     ical.add('version', '2.0')
 
-    DEFAULT_LANG = generator.settings['DEFAULT_LANG']
-    curr_events = events if not localized_events else localized_events[DEFAULT_LANG]
+    default_lang = generator.settings['DEFAULT_LANG']
+    curr_events = events if not localized_events else localized_events[default_lang]
 
-    filtered_list = filter(lambda x: x.event_plugin_data["dtstart"] >= datetime.now().astimezone(), curr_events)
+    site_tz = get_tz(generator.settings)
+    filtered_list = filter(lambda x: x.event_plugin_data["dtstart"] >= datetime.now(tz=site_tz), curr_events)
 
     for e in filtered_list:
+        if 'date' in e.metadata:
+            dtstamp = parse_tstamp(e.metadata, 'date', site_tz)
+        else:
+            dtstamp = datetime.now(tzinfo=site_tz)
         icalendar_event = icalendar.Event(
             summary=strip_html_tags(e.metadata[metadata_field_for_event_summary]),
-            dtstart=basic_utc_isoformat(e.event_plugin_data["dtstart"]),
-            dtend=basic_utc_isoformat(e.event_plugin_data["dtend"]),
-            dtstamp=basic_utc_isoformat(e.metadata['date']),
+            dtstart=e.event_plugin_data["dtstart"],
+            dtend=e.event_plugin_data["dtend"],
+            dtstamp=dtstamp,
             priority=5,
             uid=generator.settings['SITEURL'] + e.url,
         )
@@ -252,9 +248,11 @@ def generate_localized_events(generator):
 
 
 def populate_context_variables(generator):
-    """Populate the event_list and upcoming_events_list variables to be used in jinja templates
-    """
-    filter_future = lambda ev: ev.event_plugin_data["dtend"].date() >= datetime.now().date()
+    """Populate the event_list and upcoming_events_list variables to be used in jinja templates."""
+    site_tz = get_tz(generator.settings)
+
+    def filter_future(ev):
+        return ev.event_plugin_data["dtend"].date() >= datetime.now(tz=site_tz).date()
 
     if not localized_events:
         generator.context['events_list'] = sorted(events, reverse=True,
@@ -276,9 +274,7 @@ def populate_context_variables(generator):
 
 
 def initialize_events(article_generator):
-    """Clears the events list before generating articles to properly support plugins with
-    multiple generation passes like i18n_subsites
-    """
+    """Clear events list to support plugins with multiple generation passes like i18n_subsites."""
     del events[:]
     localized_events.clear()
     insert_recurring_events(article_generator)
