@@ -13,8 +13,6 @@ Released under AGPLv3+ license, see LICENSE
 """
 from collections import defaultdict
 from datetime import datetime, timedelta, tzinfo
-from html.parser import HTMLParser
-from io import StringIO
 import logging
 import os.path
 from pprint import pformat
@@ -23,6 +21,7 @@ from zoneinfo import ZoneInfo
 
 from dateutil import rrule
 import dateutil.parser
+import html2text
 import icalendar
 from recurrent.event_parser import RecurringEvent
 
@@ -43,28 +42,16 @@ events = []
 localized_events = defaultdict(list)
 
 
-class MLStripper(HTMLParser):
-    """HTMLParser wrapper to strip HTML tags and pull out plain text."""
-
-    def __init__(self):
-        """Initialize MLStripper object as an HTMLParser instance."""
-        super().__init__()
-        self.reset()
-        self.strict = False
-        self.convert_charrefs = True
-        self.text = StringIO()
-
-    def handle_data(self, d):
-        self.text.write(d)
-
-    def get_data(self):
-        return self.text.getvalue()
-
-
 def strip_html_tags(html):
-    s = MLStripper()
-    s.feed(html)
-    return s.get_data()
+    """Remove HTML tags for use in iCalendar summary & description."""
+    text_maker = html2text.HTML2Text()
+    text_maker.escape_snob = True
+    text_maker.ignore_links = True
+    text_maker.re_space = True
+    text_maker.single_line_break = True
+    text_maker.images_to_alt = True
+    text_maker.ignore_tables = True
+    return text_maker.handle(html).rstrip()
 
 
 def get_tz(settings: Settings) -> None:
@@ -173,7 +160,7 @@ def insert_recurring_events(generator):
 
 
 def xfer_metadata_to_event(metadata: dict[str, Any] | None, event: icalendar.cal.Event) -> None:
-    """Copy event-related metadata into the event structure."""
+    """Copy event-related metadata into the iCalendar event."""
     if not metadata:
         return
     # process all metadata prefixed with event- and add them to the iCalendar event
@@ -215,15 +202,20 @@ def generate_ical_file(generator):
         if 'date' in e.metadata:
             dtstamp = parse_tstamp(e.metadata, 'date', site_tz)
         else:
-            dtstamp = datetime.now(tzinfo=site_tz)
+            dtstamp = datetime.now(tz=site_tz)
         icalendar_event = icalendar.Event(
             summary=strip_html_tags(e.metadata[metadata_field_for_event_summary]),
-            dtstart=e.event_plugin_data["dtstart"],
-            dtend=e.event_plugin_data["dtend"],
-            dtstamp=dtstamp,
+            dtstart=icalendar.vDatetime(e.event_plugin_data["dtstart"]),
+            dtend=icalendar.vDatetime(e.event_plugin_data["dtend"]),
+            dtstamp=icalendar.vDatetime(dtstamp),
             priority=5,
             uid=generator.settings['SITEURL'] + e.url,
         )
+
+        # copy article text to description field without HTML tags
+        content_text = e.content
+        icalendar_event.add('description', strip_html_tags(content_text))
+
         # copy event- prefixed fields to icalendar object
         xfer_metadata_to_event(e.metadata, icalendar_event)
         log.debug("Added icalendar event: %s", pformat(icalendar_event))

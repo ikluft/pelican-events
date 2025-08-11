@@ -7,7 +7,7 @@ license = {text = "AGPL-3.0"}
 readme = "README.md"
 keywords = ["pelican", "plugin", "icalendar", "events"]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "Framework :: Pelican",
     "Framework :: Pelican :: Plugins",
@@ -25,6 +25,9 @@ classifiers = [
 requires-python = ">=3.11"
 dependencies = [
     "pelican>=4.5",
+    "icalendar>=5",
+    "recurrent>=0.4",
+    "html2text>=2025.4.15",
 ]
 
 [project.urls]
