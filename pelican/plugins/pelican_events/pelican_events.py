@@ -11,7 +11,6 @@ updated in 2021 by Makerspace Esslingen
 converted in 2025 to Namespace plugin by Ian Kluft for Portland Linux Kernel Meetup
 Released under AGPLv3+ license, see LICENSE
 """
-from typing import Any
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
 from html.parser import HTMLParser
@@ -19,6 +18,7 @@ from io import StringIO
 import logging
 import os.path
 from pprint import pformat
+from typing import Any
 
 from dateutil import rrule
 import icalendar
@@ -41,7 +41,10 @@ localized_events = defaultdict(list)
 
 
 class MLStripper(HTMLParser):
+    """HTMLParser wrapper to strip HTML tags and pull out plain text."""
+
     def __init__(self):
+        """Initialize MLStripper object as an HTMLParser instance."""
         super().__init__()
         self.reset()
         self.strict = False
@@ -110,7 +113,7 @@ def basic_utc_isoformat(datetime_value):
 
 
 def parse_article(content):
-    """Collect articles metadata to be used for building the event calendar
+    """Collect articles metadata to be used for building the event calendar.
 
     :returns: None
     """
@@ -183,7 +186,7 @@ def xfer_metadata_to_event(metadata: dict[str, Any] | None, event: icalendar.cal
     if not metadata:
         return
     # process all metadata prefixed with event- and add them to the iCalendar event
-    # this allows flexible control of fields from RFC5545 and related standards
+    # this allows some flexibility in fields from RFC5545 and related standards
     for field in iter(metadata):
         if field.lower().startswith("event-"):
             fname = field[6:].lower()
@@ -245,7 +248,7 @@ def generate_localized_events(generator):
             if "lang" in e.metadata:
                 localized_events[e.metadata["lang"]].append(e)
             else:
-                log.debug("event %s contains no lang attribute" % (e.metadata["title"],))
+                log.debug("event %s contains no lang attribute", e.metadata["title"])
 
 
 def populate_context_variables(generator):
