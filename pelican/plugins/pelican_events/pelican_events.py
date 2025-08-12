@@ -255,6 +255,10 @@ def generate_ical_file(generator):
         # save the newly-created event structure in the calendar for export
         ical.add_component(icalendar_event)
 
+    # create directory if it doesn't exist
+    os.makedirs(os.path.dirname(ics_fname), exist_ok=True)
+
+    # write iCalendar content to file
     with open(ics_fname, 'wb') as f:
         f.write(ical.to_ical())
 
