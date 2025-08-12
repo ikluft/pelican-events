@@ -220,10 +220,14 @@ def generate_ical_file(generator):
     ical.add('prodid', '-//My calendar product//mxm.dk//')
     ical.add('version', '2.0')
 
+    # add site timezone info for VTIMEZONE section to beginning of icalendar object's list
+    site_tz = get_tz(generator.settings)
+    ical.add_component(icalendar.cal.Timezone.from_tzinfo(site_tz))
+
     default_lang = generator.settings['DEFAULT_LANG']
     curr_events = events if not localized_events else localized_events[default_lang]
 
-    site_tz = get_tz(generator.settings)
+    # get list of blog entries with metadata indicating they are events
     filtered_list = filter(lambda x: x.event_plugin_data["dtstart"] >= datetime.now(tz=site_tz), curr_events)
 
     for e in filtered_list:
@@ -248,6 +252,7 @@ def generate_ical_file(generator):
         xfer_metadata_to_event(e.metadata, icalendar_event)
         log.debug("Added icalendar event: %s", pformat(icalendar_event))
 
+        # save the newly-created event structure in the calendar for export
         ical.add_component(icalendar_event)
 
     with open(ics_fname, 'wb') as f:
