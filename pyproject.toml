@@ -104,6 +104,23 @@ combine-as-imports = true
 force-sort-within-sections = true
 known-first-party = ["pelican"]
 
+[tool.ruff.lint.per-file-ignores]
+# Ignore `E402` (import violations) in all `__init__.py` files
+"__init__.py" = ["E402"]
+
+[tool.pylint.main]
+ignore-paths = [ "tasks.py" ]
+
+[tool.pylint.variables]
+init-import = false
+
+[tool.pylint.format]
+max-line-length = 120
+
+[pycodestyle]
+# E501 reports lines that exceed length limit (default 100)
+max-line-length = 120
+
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"

@@ -41,6 +41,37 @@ TIME_MULTIPLIERS = {
 events = []
 localized_events = defaultdict(list)
 
+#
+# Exception classes
+#
+
+
+class FieldParseError(ValueError):
+    """Exception class for value error in field name."""
+
+    def __init__(self, field_name: str, title: str, error: str) -> None:  # noqa: D107
+        super().__init__(f"Unable to parse the '{field_name}' field in the event named '{title}': {error}")
+
+
+class UnknownTimeMultiplier(KeyError):
+    """Exception class for unrecognized time multiplier in event duration."""
+
+    def __init__(self, multiplier: str, title: str) -> None:  # noqa: D107
+        super().__init__(f"Unknown time multiplier '{multiplier}' value in the 'event-duration' field \
+                         in the '{title}' event. Supported multipliers are:"
+                         + ' '.join(TIME_MULTIPLIERS))
+
+
+class DurationParseError(ValueError):
+    """Exception class for unrecognized event duration parameter."""
+
+    def __init__(self, param: str, title: str) -> None:  # noqa: D107
+        super().__init__(f"Unable to parse '{param}' value in the 'event-duration' field in the '{title}' event.")
+
+#
+# utility functions
+#
+
 
 def strip_html_tags(html):
     """Remove HTML tags for use in iCalendar summary & description."""
@@ -67,8 +98,7 @@ def parse_tstamp(metadata: dict[str, Any] | None, field_name: str, tz: tzinfo) -
         # return datetime.strptime(metadata[field_name], '%Y-%m-%d %H:%M').replace(tzinfo=tz)
         return dateutil.parser.parse(metadata[field_name]).replace(tzinfo=tz)
     except Exception as e:
-        title = metadata['title']
-        raise ValueError(f"Unable to parse the '{field_name}' field in the event named '{title}': {e}") from e
+        raise FieldParseError(field_name=field_name, title=metadata['title'], error=str(e)) from e
 
 
 def parse_timedelta(metadata) -> timedelta:
@@ -81,14 +111,9 @@ def parse_timedelta(metadata) -> timedelta:
             val = float(c[:-1])
             tdargs[m] = val
         except KeyError as e:
-            log.exception("""Unknown time multiplier '%s' value in the \
-'event-duration' field in the '%s' event. Supported multipliers \
-are: '%s'.""", c, metadata['title'], ' '.join(TIME_MULTIPLIERS))
-            raise RuntimeError(f"Unknown time multiplier '{c}'") from e
+            raise UnknownTimeMultiplier(multiplier=c, title=metadata['title']) from e
         except ValueError as e:
-            log.exception("""Unable to parse '%s' value in the 'event-duration' \
-field in the '%s' event.""", c, metadata['title'])
-            raise ValueError(f"Unable to parse '{c}'") from e
+            raise DurationParseError(param=c, title=metadata['title']) from e
     return timedelta(**tdargs)
 
 
@@ -122,9 +147,9 @@ def parse_article(content) -> None:
 
 
 def insert_recurring_events(generator):
-    global events
+    """Process recurring_events data from PLUGIN_EVENTS configuration."""
 
-    class AttributeDict(dict):
+    class _AttributeDict(dict):
         __getattr__ = dict.__getitem__
         __setattr__ = dict.__setitem__
         __delattr__ = dict.__delitem__
@@ -142,7 +167,7 @@ def insert_recurring_events(generator):
 
         event_duration = parse_timedelta(event)
 
-        gen_event = AttributeDict({
+        gen_event = _AttributeDict({
             'url': f"pages/{event['page_url']}",
             'location': event['location'],
             'metadata': {
@@ -171,10 +196,13 @@ def xfer_metadata_to_event(metadata: dict[str, Any] | None, event: icalendar.cal
             if fname not in ["start", "end", "duration"]:
                 event.add(fname.lower(), metadata[field])
 
+#
+# Pelican plugin API signal handlers
+#
+
 
 def generate_ical_file(generator):
     """Generate an iCalendar file."""
-    global events
     ics_fname = generator.settings['PLUGIN_EVENTS']['ics_fname']
     if not ics_fname:
         return
@@ -227,7 +255,7 @@ def generate_ical_file(generator):
 
 
 def generate_localized_events(generator):
-    """Generates localized events dict if i18n_subsites plugin is active."""
+    """Generate localized events dict if i18n_subsites plugin is active."""
     if "i18n_subsites" in generator.settings["PLUGINS"]:
         if not os.path.exists(generator.settings['OUTPUT_PATH']):
             os.makedirs(generator.settings['OUTPUT_PATH'])
@@ -273,6 +301,10 @@ def initialize_events(article_generator):
 
 
 def register():
+    """Register Pelican plugin API signal handler functions.
+
+    See https://docs.getpelican.com/en/latest/plugins.html#list-of-signals for descriptions of signals.
+    """
     signals.article_generator_init.connect(initialize_events)
     signals.content_object_init.connect(parse_article)
     signals.article_generator_finalized.connect(generate_localized_events)
