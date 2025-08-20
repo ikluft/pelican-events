@@ -281,7 +281,7 @@ def field_name_check(fname: str) -> str | None:
     prop_status = ICAL_PROPS[fname.upper()]
     if prop_status[0] == ICAL_ALLOWED:
         return None
-    return f"iCalendar property '{fname}' disallowed for published events, ref: " + prop_status[1]
+    return f"property '{fname}' disallowed, ref: " + prop_status[1]
 
 
 def xfer_metadata_to_event(metadata: dict[str, Any] | None, event: icalendar.cal.Event) -> None:
@@ -292,12 +292,14 @@ def xfer_metadata_to_event(metadata: dict[str, Any] | None, event: icalendar.cal
     # process all metadata prefixed with event- and add them to the iCalendar event
     # this allows some flexibility in fields from RFC5545 and related standards
     errors = []
+    comment = []
     for field in iter(metadata):
         if field.lower().startswith("event-"):
             fname = field[6:].lower()
 
-            # skip comment property, processed at end if present
+            # save comment property for later, append errors at end if any
             if fname.lower() == 'comment':
+                comment.append(metadata[field])
                 continue
 
             # skip start, end and duration because they are generated internally
@@ -311,7 +313,13 @@ def xfer_metadata_to_event(metadata: dict[str, Any] | None, event: icalendar.cal
 
             event.add(fname.lower(), metadata[field])
 
-    # TODO: process or create comment field to add errors list
+    # process comment property combining user text with any errors that may have occurred
+    if len(errors) > 0:
+        comment.append("*** errors occurred in processing event ***")
+        comment += errors
+    if len(comment) > 0:
+        event.add('comment', "\n".join(comment))
+
 
 #
 # Pelican plugin API signal handlers
