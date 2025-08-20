@@ -30,6 +30,11 @@ from pelican.settings import Settings
 
 log = logging.getLogger(__name__)
 
+#
+# constants
+#
+
+# time multiplier abbreviations for recurring event specifications
 TIME_MULTIPLIERS = {
     'w': 'weeks',
     'd': 'days',
@@ -38,6 +43,84 @@ TIME_MULTIPLIERS = {
     's': 'seconds'
 }
 
+# iCalendar property names with data to allow or disallow their use, for security reasons
+# source ref: https://www.iana.org/assignments/icalendar/icalendar.xhtml
+ICAL_DISALLOWED = False
+ICAL_ALLOWED = True
+ICAL_PROPS = {
+    'CALSCALE': [ICAL_DISALLOWED, "[RFC5545, Section 3.7.1]"],
+    'METHOD': [ICAL_DISALLOWED, "[RFC5545, Section 3.7.2]"],
+    'PRODID': [ICAL_DISALLOWED, "[RFC5545, Section 3.7.3]"],
+    'VERSION': [ICAL_DISALLOWED, "[RFC5545, Section 3.7.4]"],
+    'ATTACH': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.1.1]"],
+    'CATEGORIES': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.1.2] [RFC7986, Section 5.6]"],
+    'CLASS': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.1.3]"],
+    'COMMENT': [ICAL_ALLOWED, "[RFC5545, Section 3.8.1.4]"],
+    'DESCRIPTION': [ICAL_ALLOWED, "[RFC5545, Section 3.8.1.5] [RFC7986, Section 5.2]"],
+    'GEO': [ICAL_ALLOWED, "[RFC5545, Section 3.8.1.6]"],
+    'LOCATION': [ICAL_ALLOWED, "[RFC5545, Section 3.8.1.7]"],
+    'PERCENT-COMPLETE': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.1.8]"],
+    'PRIORITY': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.1.9]"],
+    'RESOURCES': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.1.10]"],
+    'STATUS': [ICAL_ALLOWED, "[RFC5545, Section 3.8.1.11]"],
+    'SUMMARY': [ICAL_ALLOWED, "[RFC5545, Section 3.8.1.12]"],
+    'COMPLETED': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.2.1]"],
+    'DTEND': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.2.2]"],
+    'DUE': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.2.3]"],
+    'DTSTART': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.2.4]"],
+    'DURATION': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.2.5]"],
+    'FREEBUSY': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.2.6]"],
+    'TRANSP': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.2.7]"],
+    'TZID': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.3.1]"],
+    'TZNAME': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.3.2]"],
+    'TZOFFSETFROM': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.3.3]"],
+    'TZOFFSETTO': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.3.4]"],
+    'TZURL': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.3.5]"],
+    'ATTENDEE': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.4.1]"],
+    'CONTACT': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.4.2]"],
+    'ORGANIZER': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.4.3]"],
+    'RECURRENCE-ID': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.4.4]"],
+    'RELATED-TO': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.4.5] [RFC9253, Section 9.1]"],
+    'URL': [ICAL_ALLOWED, "[RFC5545, Section 3.8.4.6] [RFC7986, Section 5.5]"],
+    'UID': [ICAL_ALLOWED, "[RFC5545, Section 3.8.4.7] [RFC7986, Section 5.3]"],
+    'EXDATE': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.5.1]"],
+    'EXRULE': [ICAL_DISALLOWED, "Deprecated [RFC2445, Section 4.8.5.2]"],
+    'RDATE': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.5.2]"],
+    'RRULE': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.5.3]"],
+    'ACTION': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.6.1]"],
+    'REPEAT': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.6.2]"],
+    'TRIGGER': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.6.3]"],
+    'CREATED': [ICAL_ALLOWED, "[RFC5545, Section 3.8.7.1]"],
+    'DTSTAMP': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.7.2]"],
+    'LAST-MODIFIED': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.7.3] [RFC7986, Section 5.4]"],
+    'SEQUENCE': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.7.4]"],
+    'REQUEST-STATUS': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.8.3]"],
+    'XML': [ICAL_DISALLOWED, "[RFC6321, Section 4.2]"],
+    'TZUNTIL': [ICAL_DISALLOWED, "[RFC7808, Section 7.1]"],
+    'TZID-ALIAS-OF': [ICAL_DISALLOWED, "[RFC7808, Section 7.2]"],
+    'BUSYTYPE': [ICAL_DISALLOWED, "[RFC7953, Section 3.2]"],
+    'NAME': [ICAL_ALLOWED, "[RFC7986, Section 5.1]"],
+    'REFRESH-INTERVAL': [ICAL_DISALLOWED, "[RFC7986, Section 5.7]"],
+    'SOURCE': [ICAL_DISALLOWED, "[RFC7986, Section 5.8]"],
+    'COLOR': [ICAL_DISALLOWED, "[RFC7986, Section 5.9]"],
+    'IMAGE': [ICAL_ALLOWED, "[RFC7986, Section 5.10]"],
+    'CONFERENCE': [ICAL_ALLOWED, "[RFC7986, Section 5.11]"],
+    'CALENDAR-ADDRESS': [ICAL_DISALLOWED, "[RFC9073, Section 6.4]"],
+    'LOCATION-TYPE': [ICAL_DISALLOWED, "[RFC9073, Section 6.1]"],
+    'PARTICIPANT-TYPE': [ICAL_DISALLOWED, "[RFC9073, Section 6.2]"],
+    'RESOURCE-TYPE': [ICAL_DISALLOWED, "[RFC9073, Section 6.3]"],
+    'STRUCTURED-DATA': [ICAL_DISALLOWED, "[RFC9073, Section 6.6]"],
+    'STYLED-DESCRIPTION': [ICAL_ALLOWED, "[RFC9073, Section 6.5]"],
+    'ACKNOWLEDGED': [ICAL_DISALLOWED, "[RFC9074, Section 6.1]"],
+    'PROXIMITY': [ICAL_DISALLOWED, "[RFC9074, Section 8.1]"],
+    'CONCEPT': [ICAL_ALLOWED, "[RFC9253, Section 8.1]"],
+    'LINK': [ICAL_ALLOWED, "[RFC9253, Section 8.2]"],
+    'REFID': [ICAL_ALLOWED, "[RFC9253, Section 8.3]"],
+}
+
+#
+# global-scoped variables
+#
 events = []
 localized_events = defaultdict(list)
 
@@ -146,7 +229,7 @@ def parse_article(content) -> None:
         events.append(content)
 
 
-def insert_recurring_events(generator):
+def insert_recurring_events(generator) -> None:
     """Process recurring_events data from PLUGIN_EVENTS configuration."""
 
     class _AttributeDict(dict):
@@ -184,17 +267,51 @@ def insert_recurring_events(generator):
         events.append(gen_event)
 
 
+def field_name_check(fname: str) -> str | None:
+    """Validate field name for iCalendar property from content. Returns None if OK, otherwise error string."""
+    # allow X- experimental properties
+    if fname.upper().startswith("X-"):
+        return None
+
+    # otherwise disallow unrecognized properties
+    if fname.upper() not in ICAL_PROPS:
+        return f"unrecognized iCalendar property '{fname}'"
+
+    # return property status from lookup
+    prop_status = ICAL_PROPS[fname.upper()]
+    if prop_status[0] == ICAL_ALLOWED:
+        return None
+    return f"iCalendar property '{fname}' disallowed for published events, ref: " + prop_status[1]
+
+
 def xfer_metadata_to_event(metadata: dict[str, Any] | None, event: icalendar.cal.Event) -> None:
-    """Copy event-related metadata into the iCalendar event."""
+    """Copy event-related metadata into the iCalendar event. Filter for relevant headers."""
     if not metadata:
         return
+
     # process all metadata prefixed with event- and add them to the iCalendar event
     # this allows some flexibility in fields from RFC5545 and related standards
+    errors = []
     for field in iter(metadata):
         if field.lower().startswith("event-"):
             fname = field[6:].lower()
+
+            # skip comment property, processed at end if present
+            if fname.lower() == 'comment':
+                continue
+
+            # skip start, end and duration because they are generated internally
             if fname not in ["start", "end", "duration"]:
-                event.add(fname.lower(), metadata[field])
+                continue
+
+            # skip disallowed properties, add note to errors list for report in comment property
+            status = field_name_check(fname)
+            if status is not None:
+                errors.append(status)
+
+            event.add(fname.lower(), metadata[field])
+
+    # TODO: process or create comment field to add errors list
 
 #
 # Pelican plugin API signal handlers
