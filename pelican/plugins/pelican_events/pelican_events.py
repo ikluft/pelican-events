@@ -324,6 +324,11 @@ def xfer_metadata_to_event(metadata: dict[str, Any] | None, event: icalendar.cal
                 log.debug("field %s processed as coordinates %s", fname, geo_text)
                 continue
 
+            # special handling for lists (CATEGORIES, RESOURCES)
+            if fname in ["categories", "resources"]:
+                event.categories = metadata[field].split(',')
+                continue
+
             event.add(fname, metadata[field])
 
     # process comment property combining user text with any errors that may have occurred
