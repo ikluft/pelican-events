@@ -54,7 +54,7 @@ ICAL_PROPS = {
     'PRODID': [ICAL_DISALLOWED, "[RFC5545, Section 3.7.3]"],
     'VERSION': [ICAL_DISALLOWED, "[RFC5545, Section 3.7.4]"],
     'ATTACH': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.1.1]"],
-    'CATEGORIES': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.1.2] [RFC7986, Section 5.6]"],
+    'CATEGORIES': [ICAL_ALLOWED, "[RFC5545, Section 3.8.1.2] [RFC7986, Section 5.6]"],
     'CLASS': [ICAL_DISALLOWED, "[RFC5545, Section 3.8.1.3]"],
     'COMMENT': [ICAL_ALLOWED, "[RFC5545, Section 3.8.1.4]"],
     'DESCRIPTION': [ICAL_ALLOWED, "[RFC5545, Section 3.8.1.5] [RFC7986, Section 5.2]"],
