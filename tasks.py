@@ -13,7 +13,7 @@ console_handler = logging.StreamHandler()
 console_handler.setLevel(level)
 logger.addHandler(console_handler)
 
-PKG_NAME = "pelican-events"
+PKG_NAME = "pelican_events"
 PKG_PATH = Path(f"pelican/plugins/{PKG_NAME}")
 
 ACTIVE_VENV = os.environ.get("VIRTUAL_ENV", None)
