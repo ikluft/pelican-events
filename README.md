@@ -54,6 +54,10 @@ If it says there are changes to make, you can run this in your workspace to appl
 
     pdm run invoke lint --fix
 
+To make a local git hook to perform these checks before each commit, make a symbolic link as follows:
+
+    ln -s "../../docs/pre-commit-git-hook.sh" .git/hooks/pre-commit
+
 License
 -------
 
