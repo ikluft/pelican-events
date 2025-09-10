@@ -1,7 +1,7 @@
 Pelican iCalendar Events Plugin: A Plugin for Pelican
 ====================================================
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/pelican-plugins/pelican-events/main.yml?branch=main)](https://github.com/ikluft/pelican-events/actions)
+[![build](https://github.com/ikluft/pelican-events/actions/workflows/main.yml/badge.svg)](https://github.com/ikluft/pelican-events/actions/workflows/main.yml)
 [![PyPI Version](https://img.shields.io/pypi/v/pelican-events)](https://pypi.org/project/pelican-events/)
 [![Downloads](https://img.shields.io/pypi/dm/pelican-events)](https://pypi.org/project/pelican-events/)
 ![License](https://img.shields.io/pypi/l/pelican-events?color=blue)
@@ -37,6 +37,22 @@ To start contributing to this plugin, review the [Contributing to Pelican][] doc
 
 [existing issues]: https://github.com/ikluft/pelican-events/issues
 [Contributing to Pelican]: https://docs.getpelican.com/en/latest/contribute.html
+
+### Development Environment
+
+Upon commit to the repository, the Github workflow will perform unit tests on current versions of Python.
+So prior to checking in code, at least run the tests on your local environment to make sure you won't break the build.
+
+    pdm run invoke tests
+
+It will also do a lint check which shows diffs that the linter wants for proper formatting.
+This is also marked as a build failure if it doesn't work.
+
+    pdm run invoke lint --diff
+
+If it says there are changes to make, you can run this in your workspace to apply those changes.
+
+    pdm run invoke lint --fix
 
 License
 -------
