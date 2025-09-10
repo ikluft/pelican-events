@@ -1,6 +1,6 @@
 """unit tests for pelican_events plugin for Pelican."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import unittest
 from zoneinfo import ZoneInfo
 
@@ -10,8 +10,8 @@ TSTAMP_METADATA = {
     "event-start": "2025-09-18 18:00",
     "event-end": "2025-09-18 21:00",
     "date": "2025-09-05 23:00",
-    "tz-none": datetime(2025, 9, 5, 23, 0, 0),
-    "tz-utc": datetime(2025, 9, 5, 23, 0, tzinfo=ZoneInfo(key="UTC")),
+    "tz-none": datetime(2025, 9, 6, 6, 0, 0),
+    "tz-utc": datetime(2025, 9, 6, 6, 0, tzinfo=ZoneInfo(key="UTC")),
     "title": "September 2025 Portland Linux Kernel Meetup",
 }
 TEST_CASES = {
@@ -47,14 +47,28 @@ TEST_CASES = {
             "in_metadata": TSTAMP_METADATA,
             "in_field_name": "tz-utc",
             "in_tz": ZoneInfo(key="UTC"),
-            "out": datetime(2025, 9, 5, 23, 0, tzinfo=ZoneInfo(key="UTC")),
+            "out": datetime(2025, 9, 6, 6, 0, tzinfo=ZoneInfo(key="UTC")),
         },
         {
             "name": "none",
             "in_metadata": TSTAMP_METADATA,
             "in_field_name": "tz-none",
             "in_tz": None,
-            "out": datetime(2025, 9, 5, 23, 0, 0),
+            "out": datetime(2025, 9, 6, 6, 0, 0),
+        },
+    ),
+    "parse_timedelta": (
+        {
+            "in_duration": "1h",
+            "out": timedelta(seconds=3600),  # seconds
+        },
+        {
+            "in_duration": "2h 30m",
+            "out": timedelta(seconds=9000),  # seconds
+        },
+        {
+            "in_duration": "4m 8s",
+            "out": timedelta(seconds=248),  # seconds
         },
     ),
 }
@@ -98,7 +112,7 @@ class TestParseTstamp(TestCaseSet):
         return "parse_tstamp"
 
     def test_strip_html_tags(self):
-        """Subtests for strip_html_tags()."""
+        """Subtests for parse_tstamp()."""
         for test_num, test_case in enumerate(TEST_CASES[self.__class__.case_set()]):
             with self.subTest(
                 type=self.__class__.case_set(), number=test_num, name=test_case["name"]
@@ -108,6 +122,31 @@ class TestParseTstamp(TestCaseSet):
                         test_case["in_metadata"],
                         test_case["in_field_name"],
                         test_case["in_tz"],
+                    ),
+                    test_case["out"],
+                )
+
+
+class TestParseTimedelta(TestCaseSet):
+    """Tests for parse_timedelta()."""
+
+    @classmethod
+    def case_set(cls):
+        """Return name of test case set."""
+        return "parse_timedelta"
+
+    def test_strip_html_tags(self):
+        """Subtests for parse_timedelta()."""
+        for test_num, test_case in enumerate(TEST_CASES[self.__class__.case_set()]):
+            with self.subTest(
+                type=self.__class__.case_set(), number=test_num, name=test_case["in_duration"]
+            ):
+                self.assertEqual(
+                    pelican.plugins.pelican_events.parse_timedelta(
+                        {
+                            "event-duration": test_case["in_duration"],
+                            "title": test_case["in_duration"],
+                        },
                     ),
                     test_case["out"],
                 )
