@@ -12,6 +12,9 @@ TSTAMP_METADATA = {
     "event-start": "2025-09-18 18:00",
     "event-end": "2025-09-18 21:00",
     "date": "2025-09-05 23:00",
+    "date-err-hour": "2025-09-05 25:00",
+    "date-err-day": "2025-09-31 23:00",
+    "date-err-month": "2025-13-05 23:00",
     "tz-none": datetime(2025, 9, 6, 6, 0, 0),
     "tz-utc": datetime(2025, 9, 6, 6, 0, tzinfo=ZoneInfo(key="UTC")),
     "title": "September 2025 Portland Linux Kernel Meetup",
@@ -59,6 +62,29 @@ TEST_CASES = {
             "out": datetime(2025, 9, 6, 6, 0, 0),
         },
     ),
+    "ExceptParseTstamp": (
+        {
+            "name": "field parse error",
+            "in_metadata": TSTAMP_METADATA,
+            "in_field_name": "date-err-hour",
+            "in_tz": None,
+            "exception": pelican.plugins.pelican_events.FieldParseError,
+        },
+        {
+            "name": "field parse error",
+            "in_metadata": TSTAMP_METADATA,
+            "in_field_name": "date-err-day",
+            "in_tz": None,
+            "exception": pelican.plugins.pelican_events.FieldParseError,
+        },
+        {
+            "name": "field parse error",
+            "in_metadata": TSTAMP_METADATA,
+            "in_field_name": "date-err-month",
+            "in_tz": None,
+            "exception": pelican.plugins.pelican_events.FieldParseError,
+        },
+    ),
     "TestParseTimedelta": (
         {
             "in_duration": "1h",
@@ -73,6 +99,20 @@ TEST_CASES = {
             "out": timedelta(seconds=248),  # seconds
         },
     ),
+    "ExceptParseTimedelta": (
+        {
+            "in_duration": "1b",
+            "exception": pelican.plugins.pelican_events.UnknownTimeMultiplier,
+        },
+        {
+            "in_duration": "hah",
+            "exception": pelican.plugins.pelican_events.DurationParseError,
+        },
+        {
+            "in_duration": "m",
+            "exception": pelican.plugins.pelican_events.DurationParseError,
+        },
+    ),
 }
 
 
@@ -85,7 +125,7 @@ class TestCaseSet(unittest.TestCase, metaclass=ABCMeta):
             with self.subTest(
                 type=self.__class__.__name__, name=self.case_name(test_num, test_case)
             ):
-                self.do_test(test_case)
+                self.do_test(test_num, test_case)
 
     @abc.abstractmethod
     def case_name(self, test_num: int, test_case: dict) -> str:
@@ -93,7 +133,7 @@ class TestCaseSet(unittest.TestCase, metaclass=ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def do_test(self, test_case: dict) -> None:
+    def do_test(self, test_num: int, test_case: dict) -> None:
         """Perform a single test case."""
         raise NotImplementedError
 
@@ -105,7 +145,7 @@ class TestStripHtmlTags(TestCaseSet):
         """Return a name of the test case to make it easier to find in error reporting."""
         return f"[{test_num}] {test_case['in']}"
 
-    def do_test(self, test_case: dict) -> None:
+    def do_test(self, test_num: int, test_case: dict) -> None:
         """Perform a single test case."""
         self.assertEqual(
             pelican.plugins.pelican_events.strip_html_tags(test_case["in"]),
@@ -113,7 +153,7 @@ class TestStripHtmlTags(TestCaseSet):
         )
 
     def test_strip_html_tags(self):
-        """Subtests for strip_html_tags()."""
+        """Subtests for strip_html_tags(). The test_ prefix gets discovered and run by unittest."""
         self.iterate_tests()
 
 
@@ -124,7 +164,7 @@ class TestParseTstamp(TestCaseSet):
         """Return a name of the test case to make it easier to find in error reporting."""
         return f"[{test_num}] {test_case['name']}"
 
-    def do_test(self, test_case: dict) -> None:
+    def do_test(self, test_num: int, test_case: dict) -> None:
         """Perform a single test case."""
         self.assertEqual(
             pelican.plugins.pelican_events.parse_tstamp(
@@ -136,7 +176,30 @@ class TestParseTstamp(TestCaseSet):
         )
 
     def test_strip_html_tags(self):
-        """Subtests for parse_tstamp()."""
+        """Subtests for parse_tstamp(). The test_ prefix gets discovered and run by unittest."""
+        self.iterate_tests()
+
+
+class ExceptParseTstamp(TestCaseSet):
+    """Tests for parse_tstamp() which raise exceptions."""
+
+    def case_name(self, test_num: int, test_case: dict) -> str:
+        """Return a name of the test case to make it easier to find in error reporting."""
+        return f"[{test_num}] {test_case['name']}"
+
+    def do_test(self, test_num: int, test_case: dict) -> None:
+        """Perform a single test case."""
+        with self.assertRaises(
+            test_case["exception"], msg=self.case_name(test_num, test_case)
+        ):
+            pelican.plugins.pelican_events.parse_tstamp(
+                test_case["in_metadata"],
+                test_case["in_field_name"],
+                test_case["in_tz"],
+            )
+
+    def test_exc_strip_html_tags(self):
+        """Subtests for parse_tstamp(). The test_ prefix gets discovered and run by unittest."""
         self.iterate_tests()
 
 
@@ -147,7 +210,7 @@ class TestParseTimedelta(TestCaseSet):
         """Return a name of the test case to make it easier to find in error reporting."""
         return f"[{test_num}] {test_case['in_duration']}"
 
-    def do_test(self, test_case: dict) -> None:
+    def do_test(self, test_num: int, test_case: dict) -> None:
         """Perform a single test case."""
         self.assertEqual(
             pelican.plugins.pelican_events.parse_timedelta(
@@ -160,7 +223,31 @@ class TestParseTimedelta(TestCaseSet):
         )
 
     def test_strip_html_tags(self):
-        """Subtests for parse_timedelta()."""
+        """Subtests for parse_timedelta(). The test_ prefix gets discovered and run by unittest."""
+        self.iterate_tests()
+
+
+class ExceptParseTimedelta(TestCaseSet):
+    """Tests for parse_timedelta() which raise exceptions."""
+
+    def case_name(self, test_num: int, test_case: dict) -> str:
+        """Return a name of the test case to make it easier to find in error reporting."""
+        return f"[{test_num}] {test_case['in_duration']}"
+
+    def do_test(self, test_num: int, test_case: dict) -> None:
+        """Perform a single test case."""
+        with self.assertRaises(
+            test_case["exception"], msg=self.case_name(test_num, test_case)
+        ):
+            pelican.plugins.pelican_events.parse_timedelta(
+                {
+                    "event-duration": test_case["in_duration"],
+                    "title": test_case["in_duration"],
+                },
+            )
+
+    def test_strip_html_tags(self):
+        """Subtests for parse_timedelta(). The test_ prefix gets discovered and run by unittest."""
         self.iterate_tests()
 
 
