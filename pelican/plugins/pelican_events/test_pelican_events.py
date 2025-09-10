@@ -1,5 +1,7 @@
 """unit tests for pelican_events plugin for Pelican."""
 
+import abc
+from abc import ABCMeta
 from datetime import datetime, timedelta
 import unittest
 from zoneinfo import ZoneInfo
@@ -74,64 +76,92 @@ TEST_CASES = {
 }
 
 
-class TestCaseSet(unittest.TestCase):
+class TestCaseSet(unittest.TestCase, metaclass=ABCMeta):
     """Base class for test case sets."""
+
+    def iterate_tests(self):
+        """Iterate through test cases for the class."""
+        for test_num, test_case in enumerate(TEST_CASES[self.__class__.__name__]):
+            with self.subTest(
+                type=self.__class__.__name__, name=self.case_name(test_num, test_case)
+            ):
+                self.do_test(test_case)
+
+    @abc.abstractmethod
+    def case_name(self, test_num: int, test_case: dict) -> str:
+        """Return a name of the test case to make it easier to find in error reporting."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def do_test(self, test_case: dict) -> None:
+        """Perform a single test case."""
+        raise NotImplementedError
 
 
 class TestStripHtmlTags(TestCaseSet):
     """Tests for strip_html_tags()."""
 
+    def case_name(self, test_num: int, test_case: dict) -> str:
+        """Return a name of the test case to make it easier to find in error reporting."""
+        return f"[{test_num}] {test_case['in']}"
+
+    def do_test(self, test_case: dict) -> None:
+        """Perform a single test case."""
+        self.assertEqual(
+            pelican.plugins.pelican_events.strip_html_tags(test_case["in"]),
+            test_case["out"],
+        )
+
     def test_strip_html_tags(self):
         """Subtests for strip_html_tags()."""
-        for test_num, test_case in enumerate(TEST_CASES[self.__class__.__name__]):
-            with self.subTest(
-                type=self.__class__.__name__, number=test_num, text=test_case["in"]
-            ):
-                self.assertEqual(
-                    pelican.plugins.pelican_events.strip_html_tags(test_case["in"]),
-                    test_case["out"],
-                )
+        self.iterate_tests()
 
 
 class TestParseTstamp(TestCaseSet):
     """Tests for parse_tstamp()."""
 
+    def case_name(self, test_num: int, test_case: dict) -> str:
+        """Return a name of the test case to make it easier to find in error reporting."""
+        return f"[{test_num}] {test_case['name']}"
+
+    def do_test(self, test_case: dict) -> None:
+        """Perform a single test case."""
+        self.assertEqual(
+            pelican.plugins.pelican_events.parse_tstamp(
+                test_case["in_metadata"],
+                test_case["in_field_name"],
+                test_case["in_tz"],
+            ),
+            test_case["out"],
+        )
+
     def test_strip_html_tags(self):
         """Subtests for parse_tstamp()."""
-        for test_num, test_case in enumerate(TEST_CASES[self.__class__.__name__]):
-            with self.subTest(
-                type=self.__class__.__name__, number=test_num, name=test_case["name"]
-            ):
-                self.assertEqual(
-                    pelican.plugins.pelican_events.parse_tstamp(
-                        test_case["in_metadata"],
-                        test_case["in_field_name"],
-                        test_case["in_tz"],
-                    ),
-                    test_case["out"],
-                )
+        self.iterate_tests()
 
 
 class TestParseTimedelta(TestCaseSet):
     """Tests for parse_timedelta()."""
 
+    def case_name(self, test_num: int, test_case: dict) -> str:
+        """Return a name of the test case to make it easier to find in error reporting."""
+        return f"[{test_num}] {test_case['in_duration']}"
+
+    def do_test(self, test_case: dict) -> None:
+        """Perform a single test case."""
+        self.assertEqual(
+            pelican.plugins.pelican_events.parse_timedelta(
+                {
+                    "event-duration": test_case["in_duration"],
+                    "title": test_case["in_duration"],
+                },
+            ),
+            test_case["out"],
+        )
+
     def test_strip_html_tags(self):
         """Subtests for parse_timedelta()."""
-        for test_num, test_case in enumerate(TEST_CASES[self.__class__.__name__]):
-            with self.subTest(
-                type=self.__class__.__name__,
-                number=test_num,
-                name=test_case["in_duration"],
-            ):
-                self.assertEqual(
-                    pelican.plugins.pelican_events.parse_timedelta(
-                        {
-                            "event-duration": test_case["in_duration"],
-                            "title": test_case["in_duration"],
-                        },
-                    ),
-                    test_case["out"],
-                )
+        self.iterate_tests()
 
 
 if __name__ == "__main__":
