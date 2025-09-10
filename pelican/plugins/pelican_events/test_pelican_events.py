@@ -139,7 +139,9 @@ class TestParseTimedelta(TestCaseSet):
         """Subtests for parse_timedelta()."""
         for test_num, test_case in enumerate(TEST_CASES[self.__class__.case_set()]):
             with self.subTest(
-                type=self.__class__.case_set(), number=test_num, name=test_case["in_duration"]
+                type=self.__class__.case_set(),
+                number=test_num,
+                name=test_case["in_duration"],
             ):
                 self.assertEqual(
                     pelican.plugins.pelican_events.parse_timedelta(
