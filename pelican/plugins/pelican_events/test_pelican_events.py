@@ -15,12 +15,12 @@ TSTAMP_METADATA = {
     "title": "September 2025 Portland Linux Kernel Meetup",
 }
 TEST_CASES = {
-    "strip_html_tags": (
+    "TestStripHtmlTags": (
         {"in": "no HTML here", "out": "no HTML here"},
         {"in": "<i>italic</i>", "out": "_italic_"},
         {"in": "<b>bold</b>", "out": "**bold**"},
     ),
-    "parse_tstamp": (
+    "TestParseTstamp": (
         {
             "name": "start",
             "in_metadata": TSTAMP_METADATA,
@@ -57,7 +57,7 @@ TEST_CASES = {
             "out": datetime(2025, 9, 6, 6, 0, 0),
         },
     ),
-    "parse_timedelta": (
+    "TestParseTimedelta": (
         {
             "in_duration": "1h",
             "out": timedelta(seconds=3600),  # seconds
@@ -77,25 +77,15 @@ TEST_CASES = {
 class TestCaseSet(unittest.TestCase):
     """Base class for test case sets."""
 
-    @classmethod
-    def case_set(cls):
-        """Return name of test case set - abstract function to be redefined in subclasses."""
-        raise NotImplementedError("define and use case_set() in subclasses")
-
 
 class TestStripHtmlTags(TestCaseSet):
     """Tests for strip_html_tags()."""
 
-    @classmethod
-    def case_set(cls):
-        """Return name of test case set."""
-        return "strip_html_tags"
-
     def test_strip_html_tags(self):
         """Subtests for strip_html_tags()."""
-        for test_num, test_case in enumerate(TEST_CASES[self.__class__.case_set()]):
+        for test_num, test_case in enumerate(TEST_CASES[self.__class__.__name__]):
             with self.subTest(
-                type=self.__class__.case_set(), number=test_num, text=test_case["in"]
+                type=self.__class__.__name__, number=test_num, text=test_case["in"]
             ):
                 self.assertEqual(
                     pelican.plugins.pelican_events.strip_html_tags(test_case["in"]),
@@ -106,16 +96,11 @@ class TestStripHtmlTags(TestCaseSet):
 class TestParseTstamp(TestCaseSet):
     """Tests for parse_tstamp()."""
 
-    @classmethod
-    def case_set(cls):
-        """Return name of test case set."""
-        return "parse_tstamp"
-
     def test_strip_html_tags(self):
         """Subtests for parse_tstamp()."""
-        for test_num, test_case in enumerate(TEST_CASES[self.__class__.case_set()]):
+        for test_num, test_case in enumerate(TEST_CASES[self.__class__.__name__]):
             with self.subTest(
-                type=self.__class__.case_set(), number=test_num, name=test_case["name"]
+                type=self.__class__.__name__, number=test_num, name=test_case["name"]
             ):
                 self.assertEqual(
                     pelican.plugins.pelican_events.parse_tstamp(
@@ -130,16 +115,11 @@ class TestParseTstamp(TestCaseSet):
 class TestParseTimedelta(TestCaseSet):
     """Tests for parse_timedelta()."""
 
-    @classmethod
-    def case_set(cls):
-        """Return name of test case set."""
-        return "parse_timedelta"
-
     def test_strip_html_tags(self):
         """Subtests for parse_timedelta()."""
-        for test_num, test_case in enumerate(TEST_CASES[self.__class__.case_set()]):
+        for test_num, test_case in enumerate(TEST_CASES[self.__class__.__name__]):
             with self.subTest(
-                type=self.__class__.case_set(),
+                type=self.__class__.__name__,
                 number=test_num,
                 name=test_case["in_duration"],
             ):
