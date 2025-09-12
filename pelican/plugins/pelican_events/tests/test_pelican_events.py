@@ -20,8 +20,8 @@ def pytest_generate_tests(metafunc):
     )
 
 
-class TestCaseSet:
-    """Base class for test case sets."""
+class TestCaseData:
+    """Test class for pelican_events plugin including test case data as pytest parameters."""
 
     tstamp_metadata: ClassVar[dict[str, str | datetime]] = {
         "event-start": "2025-09-18 18:00",
