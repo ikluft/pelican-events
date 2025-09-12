@@ -2,8 +2,6 @@
 # by Ian Kluft
 
 from datetime import datetime, timedelta
-import re
-import sys
 from typing import ClassVar
 from zoneinfo import ZoneInfo
 
@@ -131,16 +129,6 @@ class TestCaseSet:
             },
         ),
     }
-
-    @staticmethod
-    def crush_nonalnum(*args) -> str:
-        """Replace sequences of non-alphanumeric characters in a string with an underscore."""
-        return re.sub(r"[^a-zA-Z0-9]+", "_", " ".join(args)).lower()
-
-    @staticmethod
-    def get_class_by_name(class_name: str):
-        """Look up class object by name."""
-        return getattr(sys.modules[__name__], class_name)
 
     def test_strip_html_tags(self, text, out) -> None:
         """Tests for strip_html_tags()."""
