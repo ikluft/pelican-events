@@ -7,6 +7,12 @@ Pelican iCalendar Events Plugin: A Plugin for Pelican
 
 Pelican plugin to embed event data in posts and generate iCalendar data
 
+This project was created for the [Portland Linux Kernel Meetup](https://ikluft.github.io/pdx-lkmu/) site. Its purpose is to create iCalendar data for the Linux Kernel meetup in Portland, Oregon and also to be general-use for other groups who find it helpful. The site is set up with a static site generator Pelican.
+
+We intended to use a previously-existing "events" plugin to automatically generate iCalendar entries from events with calendar metadata. But the events plugin is unmaintained and doesn't generate enough iCalendar fields for our needs, where we need the Portland-area Calagator system to process its iCalendar output. Also, it's so old it doesn't implement the current "namespace plugin" standard for Pelican plugins, namely being a standalone Python module. That's what this project is intended to solve - rewrite it as a Python module and bring it up to current plugin standards.
+
+Let's give credit to the volunteers who created the foundation this is built upon. This plugin is intended to pull together code from the legacy [events plugin by Federico Ceratto](https://github.com/getpelican/pelican-plugins/tree/master/events) and a forked [pelican-events-plugin by Makerspace Esslingen](https://github.com/Makerspace-Esslingen/pelican-events-plugin) into a plugin compliant with the current [namespace plugin structure](https://docs.getpelican.com/en/latest/plugins.html#namespace-plugin-structure).
+
 Installation
 ------------
 
@@ -16,14 +22,7 @@ This plugin can be installed via:
 
 As long as you have not explicitly added a `PLUGINS` setting to your Pelican settings file, then the newly-installed plugin should be automatically detected and enabled. Otherwise, you must add `pelican-events` to your existing `PLUGINS` list. For more information, please see the [How to Use Plugins](https://docs.getpelican.com/en/latest/plugins.html#how-to-use-plugins) documentation.
 
-This project was created for the [Portland Linux Kernel Meetup](https://ikluft.github.io/pdx-lkmu/) site. Its purpose is to create iCalendar data for the Linux Kernel meetup in Portland, Oregon and also to be general-use for other groups who find it helpful. The site is set up with a static site generator Pelican.
-
-We intended to use a previously-existing "events" plugin to automatically generate iCalendar entries from events with calendar metadata. But the events plugin is unmaintained and doesn't generate enough iCalendar fields for our needs, where we need the Portland-area Calagator system to process its iCalendar output. Also, it's so old it doesn't implement the current "namespace plugin" standard for Pelican plugins, namely being a standalone Python module. That's what this project is intended to solve - rewrite it as a Python module and bring it up to current plugin standards.
-
-Let's give gredit to the volunteers who created the foundation this is built upon. This plugin is intended to pull together code from the legacy [events plugin by Federico Ceratto](https://github.com/getpelican/pelican-plugins/tree/master/events) and a forked [pelican-events-plugin by Makerspace Esslingen](https://github.com/Makerspace-Esslingen/pelican-events-plugin) into a plugin compliant with the current [namespace plugin structure](https://docs.getpelican.com/en/latest/plugins.html#namespace-plugin-structure).
-
-Dependencies
-------------
+### Dependencies
 
 The pelican-events plugin depends on the following Python packages:
 
@@ -41,15 +40,26 @@ Some dependencies are available for installation via OS-native packages.
 
   * on DEB-based systems (Debian, Ubuntu, etc):
 
-    apt install [TODO: package list]
+    apt install pelican python3-icalendar python3-html2text
 
 PDM (Python Dependency Manager) determines the project's dependencies with the command
 
     pdm lock
 
-Dependencies which aren't available as OS-native packages will have to be installed via PDM:
+Dependencies which aren't available as OS-native packages may be installed via PDM:
 
     pdm install
+
+### Settings
+
+Define settings in pelicanconf.py with the PLUGIN_EVENTS variable:
+
+PLUGINS = ['pelican.plugins.pelican_events']  # and other plugins as needed
+PLUGIN_EVENTS = {
+    'ics_fname': 'calendar.ics',
+    'metadata_field_for_summary': 'title',
+    'timezone': 'US/Pacific',  # use your local time zone
+}
 
 Usage
 -----
