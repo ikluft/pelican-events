@@ -22,6 +22,35 @@ We intended to use a previously-existing "events" plugin to automatically genera
 
 Let's give gredit to the volunteers who created the foundation this is built upon. This plugin is intended to pull together code from the legacy [events plugin by Federico Ceratto](https://github.com/getpelican/pelican-plugins/tree/master/events) and a forked [pelican-events-plugin by Makerspace Esslingen](https://github.com/Makerspace-Esslingen/pelican-events-plugin) into a plugin compliant with the current [namespace plugin structure](https://docs.getpelican.com/en/latest/plugins.html#namespace-plugin-structure).
 
+Dependencies
+------------
+
+The pelican-events plugin depends on the following Python packages:
+
+  * pelican
+  * icalendar
+  * recurrent
+  * html2text
+  * and others
+
+Some dependencies are available for installation via OS-native packages.
+
+  * on RPM-based systems (Fedora, RHEL, Rocky, Alma, etc):
+
+    dnf install python3-pelican python3-icalendar python3-html2text
+
+  * on DEB-based systems (Debian, Ubuntu, etc):
+
+    apt install [TODO: package list]
+
+PDM (Python Dependency Manager) determines the project's dependencies with the command
+
+    pdm lock
+
+Dependencies which aren't available as OS-native packages will have to be installed via PDM:
+
+    pdm install
+
 Usage
 -----
 
