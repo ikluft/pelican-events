@@ -3,7 +3,6 @@ Pelican iCalendar Events Plugin: A Plugin for Pelican
 
 [![build](https://github.com/ikluft/pelican-events/actions/workflows/main.yml/badge.svg)](https://github.com/ikluft/pelican-events/actions/workflows/main.yml)
 [![PyPI Version](https://img.shields.io/pypi/v/pelican-events)](https://pypi.org/project/pelican-events/)
-[![Downloads](https://img.shields.io/pypi/dm/pelican-events)](https://pypi.org/project/pelican-events/)
 ![License](https://img.shields.io/pypi/l/pelican-events?color=blue)
 
 Pelican plugin to embed event data in posts and generate iCalendar data
