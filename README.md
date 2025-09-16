@@ -1,5 +1,5 @@
-Pelican iCalendar Events Plugin: A Plugin for Pelican
-====================================================
+Pelican Events: iCalendar Plugin for Pelican
+============================================
 
 [![build](https://github.com/ikluft/pelican-events/actions/workflows/main.yml/badge.svg)](https://github.com/ikluft/pelican-events/actions/workflows/main.yml)
 [![PyPI Version](https://img.shields.io/pypi/v/pelican-events)](https://pypi.org/project/pelican-events/)
@@ -7,11 +7,13 @@ Pelican iCalendar Events Plugin: A Plugin for Pelican
 
 Pelican plugin to embed event data in posts and generate iCalendar data
 
-This project was created for the [Portland Linux Kernel Meetup](https://ikluft.github.io/pdx-lkmu/) site. Its purpose is to create iCalendar data for the Linux Kernel meetup in Portland, Oregon and also to be general-use for other groups who find it helpful. The site is set up with a static site generator Pelican.
+This project was created for the [Portland Linux Kernel Meetup (PDX-LKMU)](https://ikluft.github.io/pdx-lkmu/) site. This is a refresh of the 2015 events plugin and includes improvements from Makerspace Esslingen.
 
-We intended to use a previously-existing "events" plugin to automatically generate iCalendar entries from events with calendar metadata. But the events plugin is unmaintained and doesn't generate enough iCalendar fields for our needs, where we need the Portland-area Calagator system to process its iCalendar output. Also, it's so old it doesn't implement the current "namespace plugin" standard for Pelican plugins, namely being a standalone Python module. That's what this project is intended to solve - rewrite it as a Python module and bring it up to current plugin standards.
+This plugin/module was made to generate iCalendar data for the Linux Kernel meetup in Portland, Oregon and also to be general-use for other groups who find it helpful. The PDX-LKMU site uses the static site generator Pelican.
 
-Let's give credit to the volunteers who created the foundation this is built upon. This plugin is intended to pull together code from the legacy [events plugin by Federico Ceratto](https://github.com/getpelican/pelican-plugins/tree/master/events) and a forked [pelican-events-plugin by Makerspace Esslingen](https://github.com/Makerspace-Esslingen/pelican-events-plugin) into a plugin compliant with the current [namespace plugin structure](https://docs.getpelican.com/en/latest/plugins.html#namespace-plugin-structure).
+We intended to use the previously-existing "events" plugin to automatically generate iCalendar entries from events with calendar metadata. But the events plugin was unmaintained. It also didn't generate enough iCalendar properties for our needs, where we need the Portland-area Calagator system to process our iCalendar output. Also, the original events plugin was so old it didn't implement the current "namespace plugin" standard for Pelican plugins, namely being a standalone Python module. That's what this project was intended to solve - rewrite it as a Python module and bring it up to current plugin standards.
+
+Let's give credit to the volunteers who created the foundation this is built upon. This plugin pulls together code from the legacy [events plugin by Federico Ceratto](https://github.com/getpelican/pelican-plugins/tree/master/events) and the forked [pelican-events-plugin by Makerspace Esslingen](https://github.com/Makerspace-Esslingen/pelican-events-plugin) into a plugin compliant with the current [namespace plugin structure](https://docs.getpelican.com/en/latest/plugins.html#namespace-plugin-structure). We also added support for more iCalendar properties, as many as make sense in a public setting. A security review excluded some properties which are intended for private email use, and could cause misconfiguration or be used for mischief. Those details are documented below.
 
 Installation
 ------------
@@ -142,4 +144,4 @@ To make a local git hook to perform these checks before each commit, make a symb
 License
 -------
 
-This project is licensed under the AGPL-3.0 license.
+This project is licensed under the AGPL-3.0 license in order to be compatible with Pelican.
