@@ -1,4 +1,4 @@
-"""Unit tests for pelican_events plugin for Pelican."""
+"""test_util_funcs.py - unit tests for low-level utility functions in pelican_events plugin for Pelican."""
 # by Ian Kluft
 
 from datetime import datetime, timedelta
