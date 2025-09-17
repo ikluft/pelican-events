@@ -167,7 +167,7 @@ class DurationParseError(ValueError):
 
 
 #
-# utility functions
+# utility functions using standard library data types
 #
 
 
@@ -219,6 +219,28 @@ def parse_timedelta(metadata) -> timedelta:
         except ValueError as e:
             raise DurationParseError(param=c, title=metadata["title"]) from e
     return timedelta(**tdargs)
+
+
+def field_name_check(fname: str) -> str | None:
+    """Validate field name for iCalendar property from content. Returns None if OK, otherwise error string."""
+    # allow X- experimental properties
+    if fname.upper().startswith("X-"):
+        return None
+
+    # otherwise disallow unrecognized properties
+    if fname.upper() not in ICAL_PROPS:
+        return f"unrecognized iCalendar property '{fname}'"
+
+    # return property status from lookup
+    prop_status = ICAL_PROPS[fname.upper()]
+    if prop_status[0] == ICAL_ALLOWED:
+        return None
+    return f"property '{fname}' disallowed, ref: " + prop_status[1]
+
+
+#
+# mid-level processing functions using Pelican or iCalendar data structures
+#
 
 
 def parse_article(content) -> None:
@@ -290,23 +312,6 @@ def insert_recurring_events(generator) -> None:
             }
         )
         events.append(gen_event)
-
-
-def field_name_check(fname: str) -> str | None:
-    """Validate field name for iCalendar property from content. Returns None if OK, otherwise error string."""
-    # allow X- experimental properties
-    if fname.upper().startswith("X-"):
-        return None
-
-    # otherwise disallow unrecognized properties
-    if fname.upper() not in ICAL_PROPS:
-        return f"unrecognized iCalendar property '{fname}'"
-
-    # return property status from lookup
-    prop_status = ICAL_PROPS[fname.upper()]
-    if prop_status[0] == ICAL_ALLOWED:
-        return None
-    return f"property '{fname}' disallowed, ref: " + prop_status[1]
 
 
 def xfer_metadata_to_event(

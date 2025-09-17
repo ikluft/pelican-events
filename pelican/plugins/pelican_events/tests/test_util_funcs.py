@@ -128,6 +128,48 @@ class TestCaseData:
                 "exception": pelican.plugins.pelican_events.DurationParseError,
             },
         ),
+        "test_field_name_check": (
+            {
+                "in_fname": "location",
+                "out": None,
+            },
+            {
+                "in_fname": "LOCATION",
+                "out": None,
+            },
+            {
+                "in_fname": "FooBar",
+                "out": "unrecognized iCalendar property 'FooBar'",
+            },
+            {
+                "in_fname": "foobar",
+                "out": "unrecognized iCalendar property 'foobar'",
+            },
+            {
+                "in_fname": "FOOBAR",
+                "out": "unrecognized iCalendar property 'FOOBAR'",
+            },
+            {
+                "in_fname": "X-Experimental",
+                "out": None,
+            },
+            {
+                "in_fname": "x-experimental",
+                "out": None,
+            },
+            {
+                "in_fname": "X-EXPERIMENTAL",
+                "out": None,
+            },
+            {
+                "in_fname": "method",
+                "out": "property 'method' disallowed, ref: [RFC5545, Section 3.7.2]",
+            },
+            {
+                "in_fname": "METHOD",
+                "out": "property 'METHOD' disallowed, ref: [RFC5545, Section 3.7.2]",
+            },
+        ),
     }
 
     def test_strip_html_tags(self, text, out) -> None:
@@ -177,3 +219,7 @@ class TestCaseData:
                     "title": in_duration,
                 },
             )
+
+    def test_field_name_check(self, in_fname, out) -> None:
+        """Tests for field_name_check()."""
+        assert pelican.plugins.pelican_events.field_name_check(in_fname) == out
