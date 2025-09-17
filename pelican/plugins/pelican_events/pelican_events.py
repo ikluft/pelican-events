@@ -171,7 +171,7 @@ class DurationParseError(ValueError):
 #
 
 
-def strip_html_tags(html):
+def strip_html_tags(html) -> str:
     """Remove HTML tags for use in iCalendar summary & description."""
     text_maker = html2text.HTML2Text()
     text_maker.escape_snob = True
@@ -183,7 +183,7 @@ def strip_html_tags(html):
     return text_maker.handle(html).rstrip()
 
 
-def get_tz(settings: Settings) -> None:
+def get_tz(settings: Settings) -> ZoneInfo:
     """Get site time zone from PLUGIN_EVENTS.timezone. If found, override the default UTC."""
     return ZoneInfo(settings["PLUGIN_EVENTS"].get("timezone", "UTC"))
 
@@ -370,7 +370,7 @@ def xfer_metadata_to_event(
 #
 
 
-def generate_ical_file(generator):
+def generate_ical_file(generator) -> None:
     """Generate an iCalendar file."""
     ics_fname = generator.settings["PLUGIN_EVENTS"]["ics_fname"]
     if not ics_fname:
@@ -437,7 +437,7 @@ def generate_ical_file(generator):
         f.write(ical.to_ical())
 
 
-def generate_localized_events(generator):
+def generate_localized_events(generator) -> None:
     """Generate localized events dict if i18n_subsites plugin is active."""
     if "i18n_subsites" in generator.settings["PLUGINS"]:
         if not os.path.exists(generator.settings["OUTPUT_PATH"]):
@@ -450,7 +450,7 @@ def generate_localized_events(generator):
                 log.debug("event %s contains no lang attribute", e.metadata["title"])
 
 
-def populate_context_variables(generator):
+def populate_context_variables(generator) -> None:
     """Populate the event_list and upcoming_events_list variables to be used in jinja templates."""
     site_tz = get_tz(generator.settings)
 
@@ -498,14 +498,14 @@ def populate_context_variables(generator):
         }
 
 
-def initialize_events(article_generator):
+def initialize_events(article_generator) -> None:
     """Clear events list to support plugins with multiple generation passes like i18n_subsites."""
     del events[:]
     localized_events.clear()
     insert_recurring_events(article_generator)
 
 
-def register():
+def register() -> None:
     """Register Pelican plugin API signal handler functions.
 
     See https://docs.getpelican.com/en/latest/plugins.html#list-of-signals for descriptions of signals.
