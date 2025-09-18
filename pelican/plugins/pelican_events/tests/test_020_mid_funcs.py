@@ -5,32 +5,45 @@ from datetime import datetime
 from typing import ClassVar
 from zoneinfo import ZoneInfo
 
+import icalendar
 import pytest
 
 from pelican.contents import Article
-from pelican.plugins.pelican_events import parse_article
+from pelican.plugins.pelican_events import (
+    parse_article,
+    xfer_metadata_to_event,
+)
 from pelican.tests.support import get_settings
 
+# constants
 LOREM_IPSUM = "Lorem ipsum dolor sit amet, ad nauseam..."  # more or less standard placeholder text
+MOCK_TZ = "US/Pacific"
+MOCK_TIMES: tuple[dict[str, datetime]] = (
+    {
+        "dtstamp": datetime(2025, 9, 1, 17, 0, tzinfo=ZoneInfo(MOCK_TZ)),
+        "dtstart": datetime(2025, 9, 18, 18, 0, tzinfo=ZoneInfo(MOCK_TZ)),
+        "dtend": datetime(2025, 9, 18, 21, 0, tzinfo=ZoneInfo(MOCK_TZ)),
+    },
+)
 
 
 class TestMidFuncsData:
     """Test class with parameterization for mid-level functions in pelican_events plugin."""
 
     #
-    # test data
+    # data used by text fixtures
     #
 
-    in_settings: ClassVar[dict[str, str]] = {
+    mock_settings: ClassVar[dict[str, any]] = {
         "PLUGIN_EVENTS": {
-            "timezone": "US/Pacific",
+            "timezone": MOCK_TZ,
             "ics_fname": "calendar.ics",
         },
     }
-    in_articles: ClassVar[list[Article]] = [
+    mock_articles: ClassVar[tuple[Article]] = [
         Article(  # sample event, specified by end time
             LOREM_IPSUM,
-            settings=get_settings(PLUGIN_EVENTS=in_settings["PLUGIN_EVENTS"]),
+            settings=get_settings(PLUGIN_EVENTS=mock_settings["PLUGIN_EVENTS"]),
             metadata={
                 "title": "test 1",
                 "event-start": "2025-09-18 18:00",
@@ -39,7 +52,7 @@ class TestMidFuncsData:
         ),
         Article(  # same as previous event, specified by duration
             LOREM_IPSUM,
-            settings=get_settings(PLUGIN_EVENTS=in_settings["PLUGIN_EVENTS"]),
+            settings=get_settings(PLUGIN_EVENTS=mock_settings["PLUGIN_EVENTS"]),
             metadata={
                 "title": "test 2",
                 "event-start": "2025-09-18 18:00",
@@ -48,7 +61,7 @@ class TestMidFuncsData:
         ),
         Article(  # event fails to specify end or duration - should be zero duration
             LOREM_IPSUM,
-            settings=get_settings(PLUGIN_EVENTS=in_settings["PLUGIN_EVENTS"]),
+            settings=get_settings(PLUGIN_EVENTS=mock_settings["PLUGIN_EVENTS"]),
             metadata={
                 "title": "test 3",
                 "event-start": "2025-09-18 18:00",
@@ -56,13 +69,14 @@ class TestMidFuncsData:
         ),
         Article(  # event fails to specify start - should be skipped by events plugin
             LOREM_IPSUM,
-            settings=get_settings(PLUGIN_EVENTS=in_settings["PLUGIN_EVENTS"]),
+            settings=get_settings(PLUGIN_EVENTS=mock_settings["PLUGIN_EVENTS"]),
             metadata={
                 "title": "test 4",
             },
         ),
         "this is a string",  # test for non-Article - should be skipped by events plugin
     ]
+    mock_metadata: ClassVar[tuple[dict[str, any]]] = ()
 
     #
     # tests which check contents of event_plugin_data()
@@ -70,9 +84,9 @@ class TestMidFuncsData:
 
     @pytest.mark.parametrize(
         "in_article, event_plugin_data",
-        [
+        (
             (
-                in_articles[0],
+                mock_articles[0],
                 {
                     "dtstart": datetime(
                         2025,
@@ -80,7 +94,7 @@ class TestMidFuncsData:
                         18,
                         18,
                         0,
-                        tzinfo=ZoneInfo(in_settings["PLUGIN_EVENTS"]["timezone"]),
+                        tzinfo=ZoneInfo(mock_settings["PLUGIN_EVENTS"]["timezone"]),
                     ),
                     "dtend": datetime(
                         2025,
@@ -88,12 +102,12 @@ class TestMidFuncsData:
                         18,
                         21,
                         0,
-                        tzinfo=ZoneInfo(in_settings["PLUGIN_EVENTS"]["timezone"]),
+                        tzinfo=ZoneInfo(mock_settings["PLUGIN_EVENTS"]["timezone"]),
                     ),
                 },
             ),
             (
-                in_articles[1],
+                mock_articles[1],
                 {
                     "dtstart": datetime(
                         2025,
@@ -101,7 +115,7 @@ class TestMidFuncsData:
                         18,
                         18,
                         0,
-                        tzinfo=ZoneInfo(in_settings["PLUGIN_EVENTS"]["timezone"]),
+                        tzinfo=ZoneInfo(mock_settings["PLUGIN_EVENTS"]["timezone"]),
                     ),
                     "dtend": datetime(
                         2025,
@@ -109,12 +123,12 @@ class TestMidFuncsData:
                         18,
                         21,
                         0,
-                        tzinfo=ZoneInfo(in_settings["PLUGIN_EVENTS"]["timezone"]),
+                        tzinfo=ZoneInfo(mock_settings["PLUGIN_EVENTS"]["timezone"]),
                     ),
                 },
             ),
             (
-                in_articles[2],
+                mock_articles[2],
                 {
                     "dtstart": datetime(
                         2025,
@@ -122,7 +136,7 @@ class TestMidFuncsData:
                         18,
                         18,
                         0,
-                        tzinfo=ZoneInfo(in_settings["PLUGIN_EVENTS"]["timezone"]),
+                        tzinfo=ZoneInfo(mock_settings["PLUGIN_EVENTS"]["timezone"]),
                     ),
                     "dtend": datetime(
                         2025,
@@ -130,19 +144,19 @@ class TestMidFuncsData:
                         18,
                         18,
                         0,
-                        tzinfo=ZoneInfo(in_settings["PLUGIN_EVENTS"]["timezone"]),
+                        tzinfo=ZoneInfo(mock_settings["PLUGIN_EVENTS"]["timezone"]),
                     ),
                 },
             ),
             (
-                in_articles[3],
+                mock_articles[3],
                 None,
             ),
             (
-                in_articles[4],
+                mock_articles[4],
                 None,
             ),
-        ],
+        ),
     )
     def test_parse_article_epd(self, in_article, event_plugin_data) -> None:
         """Tests for parse_article() checing event_plugin_data contents."""
@@ -158,30 +172,72 @@ class TestMidFuncsData:
 
     @pytest.mark.parametrize(
         "in_article, log",
-        [
+        (
             (
-                in_articles[0],
+                mock_articles[0],
                 "",
             ),
             (
-                in_articles[1],
+                mock_articles[1],
                 "",
             ),
             (
-                in_articles[2],
+                mock_articles[2],
                 "Either 'event-end' or 'event-duration' must be specified in the event named 'test 3'",
             ),
             (
-                in_articles[3],
+                mock_articles[3],
                 "",
             ),
             (
-                in_articles[4],
+                mock_articles[4],
                 "",
             ),
-        ],
+        ),
     )
     def test_parse_article_log(self, in_article, log, caplog) -> None:
         """Tests for parse_article() which generate logs."""
         parse_article(in_article)  # modifies in_article
         assert log in caplog.text
+
+    @pytest.mark.parametrize(
+        "metadata_field, value, field_name, expect_accept",
+        (
+            (
+                "event-location",
+                "Lucky Labrador Beer Hall: 1945 NW Quimby, Portland OR 97209 US",
+                "LOCATION",
+                True,
+            ),
+            ("event-calscale", "MARTIAN", "CALSCALE", False),
+            ("event-method", "RejectedMethod", "METHOD", False),
+            ("event-prodid", "BSoD Generator v2.1", "PRODID", False),
+            ("event-version", "2.5", "VERSION", False),
+            ("event-attach", "https://pdx-lkmu.ikluft.github.io/", "ATTACH", False),
+            ("event-categories", "MEETING,LINUX,KERNEL,SOCIAL", "CATEGORIES", True),
+            ("event-class", "CONFIDENTIAL", "CLASS", False),
+            ("event-comment", "/* No comment! */", "COMMENT", True),
+        ),
+    )
+    def test_xfer_metadata_to_event_field(
+        self, metadata_field, value, field_name, expect_accept
+    ) -> None:
+        """Tests for xfer_metadata_to_event() which check a field in the resulting iCalendar."""
+        icalendar_event = icalendar.Event(
+            dtstart=icalendar.vDatetime(MOCK_TIMES[0]["dtstart"]),
+            dtend=icalendar.vDatetime(MOCK_TIMES[0]["dtend"]),
+            dtstamp=icalendar.vDatetime(MOCK_TIMES[0]["dtstamp"]),
+            priority=5,
+        )
+        icalendar_event.add("description", LOREM_IPSUM)
+        xfer_metadata_to_event({metadata_field: value}, icalendar_event)
+        if field_name.upper() in icalendar_event:
+            assert (
+                icalendar_event[field_name.upper()]
+                .to_ical()
+                .decode("utf-8")
+                .replace("\\", "")
+                == value
+            )
+        else:
+            assert expect_accept is False  # test for expected rejection of field
