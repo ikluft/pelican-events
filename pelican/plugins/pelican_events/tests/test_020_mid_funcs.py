@@ -20,9 +20,9 @@ LOREM_IPSUM = "Lorem ipsum dolor sit amet, ad nauseam..."  # more or less standa
 MOCK_TZ = "US/Pacific"
 MOCK_TIMES: tuple[dict[str, datetime]] = (
     {
-        "dtstamp": datetime(2025, 9, 1, 17, 0, tzinfo=ZoneInfo(MOCK_TZ)),
-        "dtstart": datetime(2025, 9, 18, 18, 0, tzinfo=ZoneInfo(MOCK_TZ)),
-        "dtend": datetime(2025, 9, 18, 21, 0, tzinfo=ZoneInfo(MOCK_TZ)),
+        "dtstamp": datetime(2025, 9, 2, 0, 0, tzinfo=ZoneInfo("UTC")),
+        "dtstart": datetime(2025, 9, 19, 1, 0, tzinfo=ZoneInfo("UTC")),
+        "dtend": datetime(2025, 9, 19, 4, 0, tzinfo=ZoneInfo("UTC")),
     },
 )
 
@@ -217,6 +217,47 @@ class TestMidFuncsData:
             ("event-categories", "MEETING,LINUX,KERNEL,SOCIAL", "CATEGORIES", True),
             ("event-class", "CONFIDENTIAL", "CLASS", False),
             ("event-comment", "/* No comment! */", "COMMENT", True),
+            (
+                "event-description",
+                "This is a description of something.",
+                "DESCRIPTION",
+                True,
+            ),
+            ("event-geo", "45.53371;-122.69174", "GEO", True),
+            ("event-percent-complete", "99", "PERCENT-COMPLETE", False),
+            ("event-priority", "9", "PRIORITY", False),
+            ("event-resources", "TABLE,BEER", "RESOURCES", False),
+            ("event-status", "CONFIRMED", "STATUS", True),
+            ("event-summary", "Social event", "SUMMARY", True),
+            ("event-completed", "20250902T000000", "COMPLETED", False),
+            ("event-dtend", "20250919T040000", "DTEND", False),
+            ("event-due", "20250919T010000", "DUE", False),
+            ("event-dtstart", "20250919T010000", "DTSTART", False),
+            ("event-duration", "PT3H0M0S", "DURATION", False),
+            ("event-freebusy", "20250919T010000Z/PT3H", "FREEBUSY", False),
+            ("event-transp", "TRANSPARENT", "TRANSP", False),
+            ("event-tzid", "US/Pacific", "TZID", False),
+            ("event-tzname", "PDT", "TZNAME", False),
+            ("event-tzoffsetfrom", "-0700", "TZOFFSETFROM", False),
+            ("event-tzoffsetto", "-0700", "TZOFFSETTO", False),
+            (
+                "event-tzurl",
+                "http://timezones.example.org/tz/US-Pacific.ics",
+                "TZURL",
+                False,
+            ),
+            ("event-attendee", "mailto:lucy@example.com", "ATTENDEE", False),
+            ("event-contact", "mailto:woodstock@example.com", "CONTACT", False),
+            ("event-organizer", "mailto:snoopy@example.com", "ORGANIZER", False),
+            ("event-recurrence-id", "20250919T010000Z", "RECURRENCE-ID", False),
+            (
+                "event-related-to",
+                "20250919-010000-000F-DEADBEEF@example.com",
+                "RELATED-TO",
+                False,
+            ),
+            ("event-url", "https://ikluft.github.io/pdx-lkmu/", "URL", False),
+            ("event-uid", "20250902-000000-000A-CAFEF00D@example.com", "UID", False),
         ),
     )
     def test_xfer_metadata_to_event_field(
@@ -227,17 +268,26 @@ class TestMidFuncsData:
             dtstart=icalendar.vDatetime(MOCK_TIMES[0]["dtstart"]),
             dtend=icalendar.vDatetime(MOCK_TIMES[0]["dtend"]),
             dtstamp=icalendar.vDatetime(MOCK_TIMES[0]["dtstamp"]),
-            priority=5,
         )
-        icalendar_event.add("description", LOREM_IPSUM)
         xfer_metadata_to_event({metadata_field: value}, icalendar_event)
         if field_name.upper() in icalendar_event:
-            assert (
-                icalendar_event[field_name.upper()]
-                .to_ical()
-                .decode("utf-8")
-                .replace("\\", "")
-                == value
-            )
+            if isinstance(icalendar_event[field_name.upper()], icalendar.prop.TimeBase):
+                value_dt = datetime.fromisoformat(value).replace(tzinfo=ZoneInfo("UTC"))
+                assert icalendar_event[field_name.upper()].dt == value_dt
+            elif isinstance(
+                icalendar_event[field_name.upper()],
+                icalendar.prop.vCategory | icalendar.prop.vText,
+            ):
+                assert (
+                    icalendar_event[field_name.upper()]
+                    .to_ical()
+                    .decode("utf-8")
+                    .replace("\\", "")
+                    == value
+                )
+            elif isinstance(icalendar_event[field_name.upper()], icalendar.prop.vGeo):
+                assert icalendar_event[field_name.upper()].to_ical() == value
+            else:
+                assert icalendar_event[field_name.upper()] == value
         else:
             assert expect_accept is False  # test for expected rejection of field
