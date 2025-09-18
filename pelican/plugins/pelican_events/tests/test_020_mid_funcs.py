@@ -11,9 +11,15 @@ from pelican.contents import Article
 from pelican.plugins.pelican_events import parse_article
 from pelican.tests.support import get_settings
 
+LOREM_IPSUM = "Lorem ipsum dolor sit amet, ad nauseam..."  # more or less standard placeholder text
+
 
 class TestMidFuncsData:
-    """Test class with fixture data for mid-level functions in pelican_events plugin."""
+    """Test class with parameterization for mid-level functions in pelican_events plugin."""
+
+    #
+    # test data
+    #
 
     in_settings: ClassVar[dict[str, str]] = {
         "PLUGIN_EVENTS": {
@@ -23,7 +29,7 @@ class TestMidFuncsData:
     }
     in_articles: ClassVar[list[Article]] = [
         Article(  # sample event, specified by end time
-            "",
+            LOREM_IPSUM,
             settings=get_settings(PLUGIN_EVENTS=in_settings["PLUGIN_EVENTS"]),
             metadata={
                 "title": "test 1",
@@ -32,7 +38,7 @@ class TestMidFuncsData:
             },
         ),
         Article(  # same as previous event, specified by duration
-            "",
+            LOREM_IPSUM,
             settings=get_settings(PLUGIN_EVENTS=in_settings["PLUGIN_EVENTS"]),
             metadata={
                 "title": "test 2",
@@ -41,7 +47,7 @@ class TestMidFuncsData:
             },
         ),
         Article(  # event fails to specify end or duration - should be zero duration
-            "",
+            LOREM_IPSUM,
             settings=get_settings(PLUGIN_EVENTS=in_settings["PLUGIN_EVENTS"]),
             metadata={
                 "title": "test 3",
@@ -49,7 +55,7 @@ class TestMidFuncsData:
             },
         ),
         Article(  # event fails to specify start - should be skipped by events plugin
-            "",
+            LOREM_IPSUM,
             settings=get_settings(PLUGIN_EVENTS=in_settings["PLUGIN_EVENTS"]),
             metadata={
                 "title": "test 4",
@@ -57,6 +63,10 @@ class TestMidFuncsData:
         ),
         "this is a string",  # test for non-Article - should be skipped by events plugin
     ]
+
+    #
+    # tests which check contents of event_plugin_data()
+    #
 
     @pytest.mark.parametrize(
         "in_article, event_plugin_data",
@@ -135,12 +145,16 @@ class TestMidFuncsData:
         ],
     )
     def test_parse_article_epd(self, in_article, event_plugin_data) -> None:
-        """Tests for parse_article() checing event_plugin_data."""
+        """Tests for parse_article() checing event_plugin_data contents."""
         parse_article(in_article)  # modifies in_article
         if hasattr(in_article, "event_plugin_data"):
             assert in_article.event_plugin_data == event_plugin_data
         else:
             assert event_plugin_data is None  # test for non-existence using None
+
+    #
+    # tests which check contents of logging
+    #
 
     @pytest.mark.parametrize(
         "in_article, log",
