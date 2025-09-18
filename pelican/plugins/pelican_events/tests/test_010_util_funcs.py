@@ -1,4 +1,4 @@
-"""test_util_funcs.py - unit tests for low-level utility functions in pelican_events plugin for Pelican."""
+"""test_010_util_funcs.py - unit tests for low-level utility functions in pelican_events plugin for Pelican."""
 # by Ian Kluft
 
 from datetime import datetime, timedelta
@@ -21,7 +21,7 @@ def pytest_generate_tests(metafunc):
 
 
 class TestCaseData:
-    """Test class for pelican_events plugin including test case data as pytest parameters."""
+    """Test class and fixture data for low-level utility functions in pelican_events plugin."""
 
     tstamp_metadata: ClassVar[dict[str, str | datetime]] = {
         "event-start": "2025-09-18 18:00",
