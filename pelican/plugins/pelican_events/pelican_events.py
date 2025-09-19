@@ -326,41 +326,43 @@ def xfer_metadata_to_event(
     errors = []
     comment = []
     for field in iter(metadata):
-        if field.lower().startswith("event-"):
-            fname = field[6:].lower()
-            log.debug("processing field %s", fname)
+        if not field.lower().startswith("event-"):
+            continue
 
-            # save comment property for later, append errors at end if any
-            if fname == "comment":
-                comment.append(metadata[field])
-                log.debug("field saved as comment")
-                continue
+        fname = field[6:].lower()
+        log.debug("processing field %s", fname)
 
-            # skip start, end and duration because they are generated internally
-            if fname in ["start", "end", "duration"]:
-                log.debug("field %s skipped because it is processed separately", fname)
-                continue
+        # save comment property for later, append errors at end if any
+        if fname == "comment":
+            comment.append(metadata[field])
+            log.debug("field saved as comment")
+            continue
 
-            # skip disallowed properties, add note to errors list for report in comment property
-            status = field_name_check(fname)
-            if status is not None:
-                errors.append(status)
-                log.debug("field %s skipped because of error %s", fname, status)
-                continue
+        # skip start, end and duration because they are generated internally
+        if fname in ["start", "end", "duration"]:
+            log.debug("field %s skipped because it is processed separately", fname)
+            continue
 
-            # special handling for "GEO" geographic coordinates
-            if fname == "geo":
-                geo_text = metadata[field]
-                event.add("geo", vGeo.from_ical(geo_text))
-                log.debug("field %s processed as coordinates %s", fname, geo_text)
-                continue
+        # skip disallowed properties, add note to errors list for report in comment property
+        status = field_name_check(fname)
+        if status is not None:
+            errors.append(status)
+            log.debug("field %s skipped because of error %s", fname, status)
+            continue
 
-            # special handling for lists (CATEGORIES, RESOURCES)
-            if fname in ["categories", "resources"]:
-                event.categories = metadata[field].split(",")
-                continue
+        # special handling for "GEO" geographic coordinates
+        if fname == "geo":
+            geo_text = metadata[field]
+            event.add("geo", vGeo.from_ical(geo_text))
+            log.debug("field %s processed as coordinates %s", fname, geo_text)
+            continue
 
-            event.add(fname, metadata[field])
+        # special handling for lists (CATEGORIES, RESOURCES)
+        if fname in ["categories", "resources"]:
+            event.categories = metadata[field].split(",")
+            continue
+
+        event.add(fname, metadata[field])
 
     # process comment property combining user text with any errors that may have occurred
     if len(errors) > 0:
