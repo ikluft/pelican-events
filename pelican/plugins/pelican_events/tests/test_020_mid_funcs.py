@@ -203,6 +203,7 @@ class TestMidFuncsData:
     @pytest.mark.parametrize(
         "metadata_field, value, field_name, expect_accept",
         (
+            # note: DTSTART, DTEND & DTSTAMP can't be tested for non-existence because they're required
             (
                 "event-location",
                 "Lucky Labrador Beer Hall: 1945 NW Quimby, Portland OR 97209 US",
@@ -230,9 +231,7 @@ class TestMidFuncsData:
             ("event-status", "CONFIRMED", "STATUS", True),
             ("event-summary", "Social event", "SUMMARY", True),
             ("event-completed", "20250902T000000", "COMPLETED", False),
-            ("event-dtend", "20250919T040000", "DTEND", False),
             ("event-due", "20250919T010000", "DUE", False),
-            ("event-dtstart", "20250919T010000", "DTSTART", False),
             ("event-duration", "PT3H0M0S", "DURATION", False),
             ("event-freebusy", "20250919T010000Z/PT3H", "FREEBUSY", False),
             ("event-transp", "TRANSPARENT", "TRANSP", False),
@@ -256,38 +255,45 @@ class TestMidFuncsData:
                 "RELATED-TO",
                 False,
             ),
-            ("event-url", "https://ikluft.github.io/pdx-lkmu/", "URL", False),
-            ("event-uid", "20250902-000000-000A-CAFEF00D@example.com", "UID", False),
+            ("event-url", "https://ikluft.github.io/pdx-lkmu/", "URL", True),
+            ("event-uid", "20250902-000000-000A-CAFEF00D@example.com", "UID", True),
         ),
     )
     def test_xfer_metadata_to_event_field(
         self, metadata_field, value, field_name, expect_accept
     ) -> None:
         """Tests for xfer_metadata_to_event() which check a field in the resulting iCalendar."""
+        # create an iCalendar event for xfer_metadata_to_event() to copy into
         icalendar_event = icalendar.Event(
             dtstart=icalendar.vDatetime(MOCK_TIMES[0]["dtstart"]),
             dtend=icalendar.vDatetime(MOCK_TIMES[0]["dtend"]),
             dtstamp=icalendar.vDatetime(MOCK_TIMES[0]["dtstamp"]),
         )
+
+        # test run of xfer_metadata_to_event() to check if a field gets copied and what it got
         xfer_metadata_to_event({metadata_field: value}, icalendar_event)
-        if field_name.upper() in icalendar_event:
-            if isinstance(icalendar_event[field_name.upper()], icalendar.prop.TimeBase):
-                value_dt = datetime.fromisoformat(value).replace(tzinfo=ZoneInfo("UTC"))
-                assert icalendar_event[field_name.upper()].dt == value_dt
-            elif isinstance(
-                icalendar_event[field_name.upper()],
-                icalendar.prop.vCategory | icalendar.prop.vText,
-            ):
-                assert (
-                    icalendar_event[field_name.upper()]
-                    .to_ical()
-                    .decode("utf-8")
-                    .replace("\\", "")
-                    == value
-                )
-            elif isinstance(icalendar_event[field_name.upper()], icalendar.prop.vGeo):
-                assert icalendar_event[field_name.upper()].to_ical() == value
-            else:
-                assert icalendar_event[field_name.upper()] == value
+
+        # if the field is marked rejected, verify it wasn't copied to the iCalendar event
+        if expect_accept is False:
+            assert field_name.upper() not in icalendar_event
+            return
+
+        # otherwise test for various types that the correct value was copied
+        if isinstance(icalendar_event[field_name.upper()], icalendar.prop.TimeBase):
+            value_dt = datetime.fromisoformat(value).replace(tzinfo=ZoneInfo("UTC"))
+            assert icalendar_event[field_name.upper()].dt == value_dt
+        elif isinstance(
+            icalendar_event[field_name.upper()],
+            icalendar.prop.vCategory | icalendar.prop.vText,
+        ):
+            assert (
+                icalendar_event[field_name.upper()]
+                .to_ical()
+                .decode("utf-8")
+                .replace("\\", "")
+                == value
+            )
+        elif isinstance(icalendar_event[field_name.upper()], icalendar.prop.vGeo):
+            assert icalendar_event[field_name.upper()].to_ical() == value
         else:
-            assert expect_accept is False  # test for expected rejection of field
+            assert icalendar_event[field_name.upper()] == value
