@@ -107,9 +107,9 @@ Support for more iCalendar properties, prefixed with "event-" in the post metada
   * event-refid: free-form text that creates an identifier for associated components [[RFC9253, Section 8.3](https://www.rfc-editor.org/rfc/rfc9253#section-8.3)]
   * event-x-\*: non-standard experimental properties [[RFC5545, Section 3.8.8.2](https://www.rfc-editor.org/rfc/rfc5545#section-3.8.8.2)]
 
-However, not all properties make sense in the context of a public post. Those intended for private emails were excluded in a security review to prevent misconfiguration and mischief. A few were disallowed because they are redundant with metadata settings that generate those properties in the original events plugin. If you think you need a property which was excluded, [submit an issue to the project](https://github.com/ikluft/pelican-events/issues) stating which property is requested and explaining why it should be allowed in a public setting.
+However, not all iCalendar properties make sense in the context of a public post. Those intended for private emails were excluded in a security review to prevent misconfiguration and mischief. A few were disallowed because they are redundant with metadata settings that generate those properties in the original events plugin. If you think you need a property which was excluded, [submit an issue to the project](https://github.com/ikluft/pelican-events/issues) stating which property is requested and explaining why it should be allowed in a public setting.
 
-The disallowed properties are: *acknowledged action attach attendee busytype calendar-address calscale class color completed contact dtend dtstamp dtstart due duration exdate exrule freebusy last-modified location-type method organizer participant-type percent-complete priority prodid proximity rdate recurrence-id refresh-interval related-to repeat request-status resources resource-type rrule sequence source structured-data transp trigger tzid tzid-alias-of tzname tzoffsetfrom tzoffsetto tzuntil tzurl version xml*
+The disallowed iCalendar properties are: *acknowledged action attach attendee busytype calendar-address calscale class color completed contact dtend dtstamp dtstart due duration exdate exrule freebusy last-modified location-type method organizer participant-type percent-complete priority prodid proximity rdate recurrence-id refresh-interval related-to repeat request-status resources resource-type rrule sequence source structured-data transp trigger tzid tzid-alias-of tzname tzoffsetfrom tzoffsetto tzuntil tzurl version xml*
 
 Contributing
 ------------
@@ -140,6 +140,11 @@ If it says there are changes to make, you can run this in your workspace to appl
 To make a local git hook to perform these checks before each commit, make a symbolic link as follows:
 
     ln -s "../../docs/pre-commit-git-hook.sh" .git/hooks/pre-commit
+
+Example usage
+-------------
+
+The pelican-events plugin was made for and is used by the [Portland Linux Kernel Meetup](https://ikluft.github.io/pdx-lkmu/) in Portland, Oregon, USA.
 
 License
 -------
