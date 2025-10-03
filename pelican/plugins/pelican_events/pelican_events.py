@@ -238,6 +238,17 @@ def field_name_check(fname: str) -> str | None:
     return f"property '{fname}' disallowed, ref: " + prop_status[1]
 
 
+def timestamp_now(settings: Settings) -> datetime:
+    """Get the current timestamp, with provision to use a pre-set timestamp for testing."""
+    site_tz = get_tz(settings)
+    if "test_timestamp" in settings["PLUGIN_EVENTS"]:
+        test_timestamp = settings["PLUGIN_EVENTS"].get("test_timestamp")
+        run_timestamp = datetime.fromisoformat(test_timestamp).replace(tzinfo=site_tz)
+    else:
+        run_timestamp = datetime.now(tz=site_tz)
+    return run_timestamp
+
+
 #
 # mid-level processing functions using Pelican or iCalendar data structures
 #
@@ -288,10 +299,10 @@ def insert_recurring_events(generator) -> None:
     site_tz = get_tz(generator.settings)
     for event in generator.settings["PLUGIN_EVENTS"]["recurring_events"]:
         recurring_rule = event["recurring_rule"]
-        r = RecurringEvent(now_date=datetime.now(tz=site_tz))
+        r = RecurringEvent(now_date=timestamp_now(generator.settings))
         r.parse(recurring_rule)
         rr = rrule.rrulestr(r.get_RFC_rrule())
-        next_occurrence = rr.after(datetime.now(tz=site_tz))
+        next_occurrence = rr.after(timestamp_now(generator.settings))
 
         event_duration = parse_timedelta(event)
 
@@ -407,7 +418,7 @@ def generate_ical_file(generator) -> None:
 
     # get list of blog entries with metadata indicating they are events
     filtered_list = filter(
-        lambda x: x.event_plugin_data["dtstart"] >= datetime.now(tz=site_tz),
+        lambda x: x.event_plugin_data["dtstart"] >= timestamp_now(generator.settings),
         curr_events,
     )
 
@@ -415,7 +426,7 @@ def generate_ical_file(generator) -> None:
         if "date" in e.metadata:
             dtstamp = parse_tstamp(e.metadata, "date", site_tz)
         else:
-            dtstamp = datetime.now(tz=site_tz)
+            dtstamp = timestamp_now(generator.settings)
         icalendar_event = icalendar.Event(
             summary=strip_html_tags(e.metadata[metadata_field_for_event_summary]),
             dtstart=icalendar.vDatetime(e.event_plugin_data["dtstart"]),
@@ -459,10 +470,12 @@ def generate_localized_events(generator) -> None:
 
 def populate_context_variables(generator) -> None:
     """Populate the event_list and upcoming_events_list variables to be used in jinja templates."""
-    site_tz = get_tz(generator.settings)
 
     def filter_future(ev):
-        return ev.event_plugin_data["dtend"].date() >= datetime.now(tz=site_tz).date()
+        return (
+            ev.event_plugin_data["dtend"].date()
+            >= timestamp_now(generator.settings).date()
+        )
 
     if not localized_events:
         generator.context["events_list"] = sorted(
