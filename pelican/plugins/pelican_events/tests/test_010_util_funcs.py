@@ -2,7 +2,7 @@
 # by Ian Kluft
 
 from datetime import datetime, timedelta
-from typing import ClassVar
+from typing import Any, ClassVar
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -23,7 +23,8 @@ def pytest_generate_tests(metafunc):
 class TestCaseData:
     """Test class and fixture data for low-level utility functions in pelican_events plugin."""
 
-    tstamp_metadata: ClassVar[dict[str, str | datetime]] = {
+    metadata_type = dict[str, str | datetime]
+    tstamp_metadata: ClassVar[metadata_type] = {
         "event-start": "2025-09-18 18:00",
         "event-end": "2025-09-18 21:00",
         "date": "2025-09-05 23:00",
@@ -34,7 +35,7 @@ class TestCaseData:
         "tz-utc": datetime(2025, 9, 6, 6, 0, tzinfo=ZoneInfo(key="UTC")),
         "title": "September 2025 Portland Linux Kernel Meetup",
     }
-    params: ClassVar[dict[str, dict[str, any]]] = {
+    params: ClassVar[dict[str, dict[str, Any]]] = {
         "test_strip_html_tags": (
             {"text": "no HTML here", "out": "no HTML here"},
             {"text": "<i>italic</i>", "out": "_italic_"},
@@ -172,11 +173,17 @@ class TestCaseData:
         ),
     }
 
-    def test_strip_html_tags(self, text, out) -> None:
+    def test_strip_html_tags(self, text: str, out: str) -> None:
         """Tests for strip_html_tags()."""
         assert pelican.plugins.pelican_events.strip_html_tags(text) == out
 
-    def test_parse_tstamp(self, in_metadata, in_field_name, in_tz, out) -> None:
+    def test_parse_tstamp(
+        self,
+        in_metadata: metadata_type,
+        in_field_name: str,
+        in_tz: ZoneInfo,
+        out: datetime,
+    ) -> None:
         """Tests for parse_tstamp()."""
         assert (
             pelican.plugins.pelican_events.parse_tstamp(
@@ -188,7 +195,7 @@ class TestCaseData:
         )
 
     def test_except_parse_tstamp(
-        self, exception, in_metadata, in_field_name, in_tz
+        self, exception, in_metadata: metadata_type, in_field_name: str, in_tz: ZoneInfo
     ) -> None:
         """Tests for parse_tstamp() which raise exceptions."""
         with pytest.raises(exception):
@@ -198,7 +205,7 @@ class TestCaseData:
                 in_tz,
             )
 
-    def test_parse_timedelta(self, in_duration, out) -> None:
+    def test_parse_timedelta(self, in_duration: str, out: timedelta) -> None:
         """Tests for parse_timedelta()."""
         assert (
             pelican.plugins.pelican_events.parse_timedelta(
@@ -210,7 +217,9 @@ class TestCaseData:
             == out
         )
 
-    def test_except_parse_timedelta(self, exception, in_duration) -> None:
+    def test_except_parse_timedelta(
+        self, exception: Exception, in_duration: str
+    ) -> None:
         """Tests for parse_timedelta() which raise exceptions."""
         with pytest.raises(exception):
             pelican.plugins.pelican_events.parse_timedelta(
@@ -220,6 +229,6 @@ class TestCaseData:
                 },
             )
 
-    def test_field_name_check(self, in_fname, out) -> None:
+    def test_field_name_check(self, in_fname: str, out: str) -> None:
         """Tests for field_name_check()."""
         assert pelican.plugins.pelican_events.field_name_check(in_fname) == out
