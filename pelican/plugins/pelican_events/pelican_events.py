@@ -306,6 +306,7 @@ def insert_recurring_events(settings: Settings) -> None:
 
         event_duration = parse_timedelta(event)
 
+        # create next event from recurrence
         gen_event = _AttributeDict(
             {
                 "url": f"pages/{event['page_url']}",
@@ -322,6 +323,18 @@ def insert_recurring_events(settings: Settings) -> None:
                 },
             }
         )
+
+        # copy all supported iCalendar properties (with "event-" prefix) to generated event
+        for field in event:
+            if not field.startswith("event-"):
+                continue
+            field_noprefix = field.removeprefix("event-")
+            if (
+                field_name_check(field_noprefix) is None
+            ):  # None indicates allowed, string indicates violation
+                gen_event["metadata"][field] = event[field]
+
+        # add generated event to events list
         events.append(gen_event)
 
 
