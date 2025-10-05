@@ -285,7 +285,7 @@ def parse_article(content) -> None:
         events.append(content)
 
 
-def insert_recurring_events(generator) -> None:
+def insert_recurring_events(settings: Settings) -> None:
     """Process recurring_events data from PLUGIN_EVENTS configuration."""
 
     class _AttributeDict(dict):
@@ -293,16 +293,16 @@ def insert_recurring_events(generator) -> None:
         __setattr__ = dict.__setitem__
         __delattr__ = dict.__delitem__
 
-    if "recurring_events" not in generator.settings["PLUGIN_EVENTS"]:
+    if "recurring_events" not in settings["PLUGIN_EVENTS"]:
         return
 
-    site_tz = get_tz(generator.settings)
-    for event in generator.settings["PLUGIN_EVENTS"]["recurring_events"]:
+    site_tz = get_tz(settings)
+    for event in settings["PLUGIN_EVENTS"]["recurring_events"]:
         recurring_rule = event["recurring_rule"]
-        r = RecurringEvent(now_date=timestamp_now(generator.settings))
+        r = RecurringEvent(now_date=timestamp_now(settings))
         r.parse(recurring_rule)
         rr = rrule.rrulestr(r.get_RFC_rrule())
-        next_occurrence = rr.after(timestamp_now(generator.settings))
+        next_occurrence = rr.after(timestamp_now(settings))
 
         event_duration = parse_timedelta(event)
 
@@ -385,6 +385,7 @@ def xfer_metadata_to_event(
 
 #
 # Pelican plugin API signal handlers
+# see API reference: https://docs.getpelican.com/en/latest/plugins.html#list-of-signals
 #
 
 
@@ -522,7 +523,7 @@ def initialize_events(article_generator) -> None:
     """Clear events list to support plugins with multiple generation passes like i18n_subsites."""
     del events[:]
     localized_events.clear()
-    insert_recurring_events(article_generator)
+    insert_recurring_events(article_generator.settings)
 
 
 def register() -> None:
