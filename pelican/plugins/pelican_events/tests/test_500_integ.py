@@ -28,13 +28,7 @@ def pytest_generate_tests(metafunc):
     # called once per each test function
     test_func_dir = get_test_path() / metafunc.function.__name__
     if test_func_dir.exists() and test_func_dir.is_dir():
-        metafunc.parametrize(["test_subdir"], [sorted(test_func_dir.glob("[0-9]*"))])
-
-    # funcarglist = metafunc.cls.params[metafunc.function.__name__]
-    # argnames = sorted(funcarglist[0])
-    # metafunc.parametrize(
-    #     argnames, [[funcargs[name] for name in argnames] for funcargs in funcarglist]
-    # )
+        metafunc.parametrize(["test_subdir"], [[name] for name in sorted(test_func_dir.glob("[0-9]*"))])
 
 
 class TestPelicanRun:
