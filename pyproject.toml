@@ -47,7 +47,7 @@ test = [
     "invoke>=2.2",
     "markdown>=3.4",
     "pytest>=7.0",
-    "pytest-cov>=4.0",
+    "pytest-cov>=7.0",
     "pytest-sugar>=1.0",
 ]
 
@@ -124,3 +124,7 @@ max-line-length = 120
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
+
+[tool.coverage.run]
+patch = ["subprocess"]
+parallel = true
