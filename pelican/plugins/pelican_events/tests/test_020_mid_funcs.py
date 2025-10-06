@@ -2,7 +2,7 @@
 # by Ian Kluft
 
 from datetime import datetime
-from typing import ClassVar
+from typing import Any, ClassVar
 from zoneinfo import ZoneInfo
 
 import icalendar
@@ -158,7 +158,9 @@ class TestMidFuncsData:
             ),
         ),
     )
-    def test_parse_article_epd(self, in_article, event_plugin_data) -> None:
+    def test_parse_article_epd(
+        self, in_article: Article, event_plugin_data: dict[str, Any]
+    ) -> None:
         """Tests for parse_article() checing event_plugin_data contents."""
         parse_article(in_article)  # modifies in_article
         if hasattr(in_article, "event_plugin_data"):
@@ -195,7 +197,7 @@ class TestMidFuncsData:
             ),
         ),
     )
-    def test_parse_article_log(self, in_article, log, caplog) -> None:
+    def test_parse_article_log(self, in_article: Article, log: str, caplog) -> None:
         """Tests for parse_article() which generate logs."""
         parse_article(in_article)  # modifies in_article
         assert log in caplog.text
@@ -341,7 +343,7 @@ class TestMidFuncsData:
         ),
     )
     def test_xfer_metadata_to_event_field(
-        self, metadata_field, value, field_name, expect_accept
+        self, metadata_field: str, value: str, field_name: str, expect_accept: bool
     ) -> None:
         """Tests for xfer_metadata_to_event() which check a field in the resulting iCalendar."""
         # create an iCalendar event for xfer_metadata_to_event() to copy into
