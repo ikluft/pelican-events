@@ -13,6 +13,7 @@ Released under AGPLv3+ license, see LICENSE
 """
 
 from collections import defaultdict
+import copy
 from datetime import datetime, timedelta, tzinfo
 import logging
 import os.path
@@ -167,6 +168,21 @@ class DurationParseError(ValueError):
 
 
 #
+# functions to support testing only
+#
+
+
+def clear_events() -> None:
+    """For testing only: clear the events list to start a unit test with a clean slate."""
+    events.clear()
+
+
+def snapshot_events() -> list:
+    """For testing only: unit tests can use this to obtain the events list; returns copy to prevent modification."""
+    return copy.copy(events)
+
+
+#
 # utility functions using standard library data types
 #
 
@@ -302,7 +318,12 @@ def insert_recurring_events(settings: Settings) -> None:
         r = RecurringEvent(now_date=timestamp_now(settings))
         r.parse(recurring_rule)
         rr = rrule.rrulestr(r.get_RFC_rrule())
-        next_occurrence = rr.after(timestamp_now(settings))
+
+        # ugly hack: dateutil.rrule only uses timezone-naive datetimes.
+        # So give it one and correct the result to site_tz.
+        next_occurrence = rr.after(
+            timestamp_now(settings).replace(tzinfo=None)
+        ).astimezone(site_tz)
 
         event_duration = parse_timedelta(event)
 
