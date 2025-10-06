@@ -323,7 +323,7 @@ def insert_recurring_events(settings: Settings) -> None:
         # So give it one and correct the result to site_tz.
         next_occurrence = rr.after(
             timestamp_now(settings).replace(tzinfo=None)
-        ).astimezone(site_tz)
+        ).replace(tzinfo=site_tz)
 
         event_duration = parse_timedelta(event)
 
