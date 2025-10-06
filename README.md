@@ -66,7 +66,7 @@ Settings available in the PLUGIN_EVENTS dictionary variable:
 
   * ics_fname: where the iCal file is written - disables plugin if not set
   * metadata_field_for_summary: which field to use for the event summary, default: summary
-  * recurring_events: recurring event rules in [recurrent module](https://github.com/kvh/recurrent) format. If not set, then recurring events will not be generated. This feature was added by Makerspace Esslingen.
+  * recurring_events: recurring event rules in [recurrent module](https://github.com/kvh/recurrent) format. If not set, then recurring events will not be generated. This feature was added by Makerspace Esslingen. *(This feature is now minimally tested with some unit tests. But we don't use it on the PDX-LKMU site.)*
   * timezone: time zone to use for events in icalendar output, default: UTC. If set, this must be an official time zone name from the [IANA Time Zone Database](https://www.iana.org/time-zones). This feature was added by Ian Kluft for Portland Linux Kernel Meetup.
 
 Usage
