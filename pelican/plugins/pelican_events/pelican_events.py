@@ -201,7 +201,12 @@ def strip_html_tags(html) -> str:
 
 def get_tz(settings: Settings) -> ZoneInfo:
     """Get site time zone from PLUGIN_EVENTS.timezone. If found, override the default UTC."""
-    return ZoneInfo(settings["PLUGIN_EVENTS"].get("timezone", "UTC"))
+    timezone = "UTC"  # start with default
+    if "TIMEZONE" in settings:
+        timezone = settings["TIMEZONE"]
+    elif "timezone" in settings["PLUGIN_EVENTS"]:
+        timezone = settings["PLUGIN_EVENTS"]["timezone"]
+    return ZoneInfo(timezone)
 
 
 def parse_tstamp(
@@ -299,6 +304,9 @@ def parse_article(content) -> None:
 
     if "status" not in content.metadata or content.metadata["status"] != "draft":
         events.append(content)
+        log.debug("parse_article: added event with start time %s", dtstart)
+    else:
+        log.debug("parse_article: skipped event with start time %s", dtstart)
 
 
 def insert_recurring_events(settings: Settings) -> None:
@@ -427,6 +435,7 @@ def generate_ical_file(generator) -> None:
     """Generate an iCalendar file."""
     ics_fname = generator.settings["PLUGIN_EVENTS"]["ics_fname"]
     if not ics_fname:
+        log.debug("generate_ical_file(): bail out, no ics_fname setting")
         return
 
     if "metadata_field_for_summary" in generator.settings["PLUGIN_EVENTS"]:
@@ -438,7 +447,6 @@ def generate_ical_file(generator) -> None:
         metadata_field_for_event_summary = "summary"
 
     ics_fname = os.path.join(generator.settings["OUTPUT_PATH"], ics_fname)
-    log.debug("Generating calendar at %s with %d events", ics_fname, len(events))
 
     ical = icalendar.Calendar()
     ical.add("prodid", "-//My calendar product//mxm.dk//")
@@ -450,34 +458,51 @@ def generate_ical_file(generator) -> None:
 
     default_lang = generator.settings["DEFAULT_LANG"]
     curr_events = events if not localized_events else localized_events[default_lang]
-
-    # get list of blog entries with metadata indicating they are events
-    filtered_list = filter(
-        lambda x: x.event_plugin_data["dtstart"] >= timestamp_now(generator.settings),
-        curr_events,
+    log.debug(
+        "generate_ical_file(): Generating calendar at %s with %d events",
+        ics_fname,
+        len(curr_events),
     )
 
-    for e in filtered_list:
-        if "date" in e.metadata:
-            dtstamp = parse_tstamp(e.metadata, "date", site_tz)
+    # get list of blog entries with metadata indicating they are events
+    timestamp = timestamp_now(generator.settings)
+    log.debug("generate_ical_file(): filtering with timestamp: %s", str(timestamp))
+    filtered_list = []
+    for c_event in curr_events:
+        dtstart = c_event.event_plugin_data["dtstart"]
+        if timestamp <= dtstart:
+            log.debug(
+                "generate_ical_file(): processing event with timestamp: %s", dtstart
+            )
+            filtered_list.append(c_event)
         else:
-            dtstamp = timestamp_now(generator.settings)
+            log.debug(
+                "generate_ical_file(): skipping event with timestamp: %s", dtstart
+            )
+
+    for f_event in filtered_list:
+        if "date" in f_event.metadata:
+            dtstamp = parse_tstamp(f_event.metadata, "date", site_tz)
+        else:
+            dtstamp = timestamp
         icalendar_event = icalendar.Event(
-            summary=strip_html_tags(e.metadata[metadata_field_for_event_summary]),
-            dtstart=icalendar.vDatetime(e.event_plugin_data["dtstart"]),
-            dtend=icalendar.vDatetime(e.event_plugin_data["dtend"]),
+            summary=strip_html_tags(f_event.metadata[metadata_field_for_event_summary]),
+            dtstart=icalendar.vDatetime(f_event.event_plugin_data["dtstart"]),
+            dtend=icalendar.vDatetime(f_event.event_plugin_data["dtend"]),
             dtstamp=icalendar.vDatetime(dtstamp),
             priority=5,
-            uid=generator.settings["SITEURL"] + e.url,
+            uid=generator.settings["SITEURL"] + f_event.url,
         )
 
         # copy article text to description field without HTML tags
-        content_text = e.content
+        content_text = f_event.content
         icalendar_event.add("description", strip_html_tags(content_text))
 
         # copy event- prefixed fields to icalendar object
-        xfer_metadata_to_event(e.metadata, icalendar_event)
-        log.debug("Added icalendar event: %s", pformat(icalendar_event))
+        xfer_metadata_to_event(f_event.metadata, icalendar_event)
+        log.debug(
+            "generate_ical_file(): added icalendar event: %s", pformat(icalendar_event)
+        )
 
         # save the newly-created event structure in the calendar for export
         ical.add_component(icalendar_event)
@@ -488,6 +513,7 @@ def generate_ical_file(generator) -> None:
     # write iCalendar content to file
     with open(ics_fname, "wb") as f:
         f.write(ical.to_ical())
+    log.debug("generate_ical_file(): end")
 
 
 def generate_localized_events(generator) -> None:
