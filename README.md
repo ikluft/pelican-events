@@ -9,7 +9,7 @@ Pelican plugin to embed event data in posts and generate iCalendar data
 
 This project was created for the [Portland Linux Kernel Meetup (PDX-LKMU)](https://ikluft.github.io/pdx-lkmu/) site. This is a refresh of the 2015 events plugin and includes improvements from Makerspace Esslingen.
 
-This plugin/module was made to generate iCalendar data for the Linux Kernel meetup in Portland, Oregon and also to be general-use for other groups who find it helpful. The PDX-LKMU site uses the static site generator Pelican.
+This plugin/module was made to generate iCalendar data for the Linux Kernel Meetup in Portland, Oregon and also to be general-use for other groups who find it helpful. The PDX-LKMU site uses the static site generator Pelican.
 
 We intended to use the previously-existing "events" plugin to automatically generate iCalendar entries from events with calendar metadata. But the events plugin was unmaintained. It also didn't generate enough iCalendar properties for our needs, where we need the Portland-area Calagator system to process our iCalendar output. Also, the original events plugin was so old it didn't implement the current "namespace plugin" standard for Pelican plugins, namely being a standalone Python module. That's what this project was intended to solve - rewrite it as a Python module and bring it up to current plugin standards.
 
@@ -18,7 +18,7 @@ Let's give credit to the volunteers who created the foundation this is built upo
 Installation
 ------------
 
-This plugin can be installed via:
+This plugin is available as ['pelican-events' on PyPI](https://pypi.org/project/pelican-events/) and can be installed via:
 
     python -m pip install pelican-events
 
@@ -42,7 +42,7 @@ Some dependencies are available for installation via OS-native packages.
 
     apt install pelican python3-icalendar python3-html2text
 
-PDM (Python Dependency Manager) determines the project's dependencies with the command
+Pelican uses PDM (Python Dependency Manager) for builds and Ruff as its linter. So the Pelican-Events plugin does too. PDM determines the project's dependencies with the command
 
     pdm lock
 
@@ -59,15 +59,17 @@ Define settings in pelicanconf.py with the PLUGIN_EVENTS variable:
     PLUGIN_EVENTS = {
         'ics_fname': 'calendar.ics',
         'metadata_field_for_summary': 'title',
-        'timezone': 'US/Pacific',  # use your local time zone
-    }
+    },
+    'TIMEZONE': 'US/Pacific',  # use your local time zone
 
 Settings available in the PLUGIN_EVENTS dictionary variable:
 
   * ics_fname: where the iCal file is written - disables plugin if not set
   * metadata_field_for_summary: which field to use for the event summary, default: summary
   * recurring_events: recurring event rules in [recurrent module](https://github.com/kvh/recurrent) format. If not set, then recurring events will not be generated. This feature was added by Makerspace Esslingen. *(This feature is now minimally tested with some unit tests. But we don't use it on the PDX-LKMU site.)*
-  * timezone: time zone to use for events in icalendar output, default: UTC. If set, this must be an official time zone name from the [IANA Time Zone Database](https://www.iana.org/time-zones). This feature was added by Ian Kluft for Portland Linux Kernel Meetup.
+
+Settings used from Pelican's top-level configuration:
+  * TIMEZONE: time zone to use for events in icalendar output, default: UTC. If set, this must be an official time zone name from the [IANA Time Zone Database](https://www.iana.org/time-zones). This feature was added by Ian Kluft for Portland Linux Kernel Meetup.
 
 Usage
 -----
