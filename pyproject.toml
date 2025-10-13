@@ -122,7 +122,7 @@ max-line-length = 120
 max-line-length = 120
 
 [build-system]
-requires = ["pdm-backend"]
+requires = ["pdm-backend >= 2.4.0"]
 build-backend = "pdm.backend"
 
 [tool.coverage.run]
