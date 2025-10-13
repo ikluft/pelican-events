@@ -36,14 +36,14 @@ class TestMidFuncsData:
 
     mock_settings: ClassVar[dict[str, any]] = {
         "PLUGIN_EVENTS": {
-            "timezone": MOCK_TZ,
             "ics_fname": "calendar.ics",
         },
+        "TIMEZONE": MOCK_TZ,
     }
     mock_articles: ClassVar[tuple[Article]] = [
         Article(  # sample event, specified by end time
             LOREM_IPSUM,
-            settings=get_settings(PLUGIN_EVENTS=mock_settings["PLUGIN_EVENTS"]),
+            settings=get_settings(**mock_settings),
             metadata={
                 "title": "test 1",
                 "event-start": "2025-09-18 18:00",
@@ -52,7 +52,7 @@ class TestMidFuncsData:
         ),
         Article(  # same as previous event, specified by duration
             LOREM_IPSUM,
-            settings=get_settings(PLUGIN_EVENTS=mock_settings["PLUGIN_EVENTS"]),
+            settings=get_settings(**mock_settings),
             metadata={
                 "title": "test 2",
                 "event-start": "2025-09-18 18:00",
@@ -61,7 +61,7 @@ class TestMidFuncsData:
         ),
         Article(  # event fails to specify end or duration - should be zero duration
             LOREM_IPSUM,
-            settings=get_settings(PLUGIN_EVENTS=mock_settings["PLUGIN_EVENTS"]),
+            settings=get_settings(**mock_settings),
             metadata={
                 "title": "test 3",
                 "event-start": "2025-09-18 18:00",
@@ -69,7 +69,7 @@ class TestMidFuncsData:
         ),
         Article(  # event fails to specify start - should be skipped by events plugin
             LOREM_IPSUM,
-            settings=get_settings(PLUGIN_EVENTS=mock_settings["PLUGIN_EVENTS"]),
+            settings=get_settings(**mock_settings),
             metadata={
                 "title": "test 4",
             },
@@ -94,7 +94,7 @@ class TestMidFuncsData:
                         18,
                         18,
                         0,
-                        tzinfo=ZoneInfo(mock_settings["PLUGIN_EVENTS"]["timezone"]),
+                        tzinfo=ZoneInfo(mock_settings["TIMEZONE"]),
                     ),
                     "dtend": datetime(
                         2025,
@@ -102,7 +102,7 @@ class TestMidFuncsData:
                         18,
                         21,
                         0,
-                        tzinfo=ZoneInfo(mock_settings["PLUGIN_EVENTS"]["timezone"]),
+                        tzinfo=ZoneInfo(mock_settings["TIMEZONE"]),
                     ),
                 },
             ),
@@ -115,7 +115,7 @@ class TestMidFuncsData:
                         18,
                         18,
                         0,
-                        tzinfo=ZoneInfo(mock_settings["PLUGIN_EVENTS"]["timezone"]),
+                        tzinfo=ZoneInfo(mock_settings["TIMEZONE"]),
                     ),
                     "dtend": datetime(
                         2025,
@@ -123,7 +123,7 @@ class TestMidFuncsData:
                         18,
                         21,
                         0,
-                        tzinfo=ZoneInfo(mock_settings["PLUGIN_EVENTS"]["timezone"]),
+                        tzinfo=ZoneInfo(mock_settings["TIMEZONE"]),
                     ),
                 },
             ),
@@ -136,7 +136,7 @@ class TestMidFuncsData:
                         18,
                         18,
                         0,
-                        tzinfo=ZoneInfo(mock_settings["PLUGIN_EVENTS"]["timezone"]),
+                        tzinfo=ZoneInfo(mock_settings["TIMEZONE"]),
                     ),
                     "dtend": datetime(
                         2025,
@@ -144,7 +144,7 @@ class TestMidFuncsData:
                         18,
                         18,
                         0,
-                        tzinfo=ZoneInfo(mock_settings["PLUGIN_EVENTS"]["timezone"]),
+                        tzinfo=ZoneInfo(mock_settings["TIMEZONE"]),
                     ),
                 },
             ),

@@ -200,7 +200,7 @@ def strip_html_tags(html) -> str:
 
 
 def get_tz(settings: Settings) -> ZoneInfo:
-    """Get site time zone from PLUGIN_EVENTS.timezone. If found, override the default UTC."""
+    """Get site time zone from TIMEZONE or PLUGIN_EVENTS.timezone. If found, override the default UTC."""
     timezone = "UTC"  # start with default
     if "TIMEZONE" in settings:
         timezone = settings["TIMEZONE"]

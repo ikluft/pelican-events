@@ -33,7 +33,6 @@ class TestRecurrence:
                 {
                     "PLUGIN_EVENTS": {
                         "test_timestamp": "2025-10-04 11:00:00",
-                        "timezone": "US/Pacific",
                         "metadata_field_for_summary": "summary",
                         "ics_fname": "calendar.ics",
                         "recurring_events": [
@@ -46,7 +45,8 @@ class TestRecurrence:
                                 "event-duration": "2h",
                             }
                         ],
-                    }
+                    },
+                    "TIMEZONE": "US/Pacific",
                 },
                 [
                     {
@@ -93,7 +93,6 @@ class TestRecurrence:
                 {
                     "PLUGIN_EVENTS": {
                         "test_timestamp": "2025-10-04 11:00:00",
-                        "timezone": "US/Pacific",
                         "metadata_field_for_summary": "summary",
                         "ics_fname": "calendar.ics",
                         "recurring_events": [
@@ -106,7 +105,8 @@ class TestRecurrence:
                                 "event-duration": "2z",
                             }
                         ],
-                    }
+                    },
+                    "TIMEZONE": "US/Pacific",
                 },
             ),
         ],

@@ -31,9 +31,9 @@ class TestTimestampData:
             {
                 "in_settings": {
                     "PLUGIN_EVENTS": {
-                        "timezone": "US/Pacific",
                         "test_timestamp": "2025-10-03 18:00:00",
                     },
+                    "TIMEZONE": "US/Pacific",
                 },
                 "out": datetime(
                     2025, 10, 3, 18, 0, 0, tzinfo=ZoneInfo(key="US/Pacific")
@@ -42,9 +42,9 @@ class TestTimestampData:
             {
                 "in_settings": {
                     "PLUGIN_EVENTS": {
-                        "timezone": "UTC",
                         "test_timestamp": "2025-10-04 01:00:00",
                     },
+                    "TIMEZONE": "UTC",
                 },
                 "out": datetime(2025, 10, 4, 1, 0, 0, tzinfo=ZoneInfo(key="UTC")),
             },
@@ -53,9 +53,9 @@ class TestTimestampData:
             {
                 "in_settings": {
                     "PLUGIN_EVENTS": {
-                        "timezone": "UTC",
                         "test_timestamp": "2025-10-04 25:00:00",
                     },
+                    "TIMEZONE": "UTC",
                 },
                 "exception": ValueError,
             },

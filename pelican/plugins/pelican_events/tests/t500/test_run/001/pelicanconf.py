@@ -3,12 +3,12 @@
 PLUGIN_EVENTS = {
     "metadata_field_for_summary": "title",
     "ics_fname": "calendar.ics",
-    "timezone": "US/Pacific",
     "test_timestamp": "2025-09-04 11:00:00",  # fixed time for this test only, before event time in content/
 }
 AUTHOR = "Pelican Events Plugin Developers"
 SITENAME = "Pelican Events Plugin Test Case"
 SITEURL = ""
+TIMEZONE = "US/Pacific"
 
 PATH = "content"
 DEFAULT_LANG = "en"
