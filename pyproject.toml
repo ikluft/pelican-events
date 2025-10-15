@@ -30,9 +30,15 @@ dependencies = [
     "html2text>=2025.4.15",
 ]
 
+[build-system]
+requires = ["pdm-backend >= 2.4.0", "keepachangelog-manager >= 4.0.0"]
+build-backend = "pdm.backend"
+
 [tool.pdm.version]
-source = "file"
-path = "pelican/plugins/pelican_events/__init__.py"
+source = "call"
+getter = "_get_version:get_version"
+write_to = "pelican/plugins/pelican_events/version.py"
+write_template = "__version__ = '{}'"
 
 [project.urls]
 "Homepage" = "https://github.com/ikluft/pelican-events"
@@ -62,12 +68,6 @@ source-includes = [
 ]
 includes = ["pelican/"]
 excludes = ["**/.DS_Store", "**/test_data/**", "tasks.py"]
-
-[tool.autopub]
-project-name = "Pelican iCalendar Events Plugin"
-git-username = "botpub"
-git-email = "52496925+botpub@users.noreply.github.com"
-append-github-contributor = true
 
 [tool.ruff.lint]
 select = [
@@ -124,10 +124,6 @@ max-line-length = 120
 [pycodestyle]
 # E501 reports lines that exceed length limit (default 100)
 max-line-length = 120
-
-[build-system]
-requires = ["pdm-backend >= 2.4.0"]
-build-backend = "pdm.backend"
 
 [tool.coverage.run]
 patch = ["subprocess"]

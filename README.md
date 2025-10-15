@@ -24,6 +24,8 @@ This plugin is available as ['pelican-events' on PyPI](https://pypi.org/project/
 
 ### Dependencies
 
+Whether installing from PyPI with pip, or building from source, you may install dependencies from OS packages if you prefer. But you will have to do that first.
+
 The pelican-events plugin depends on the following Python packages:
 
   * pelican
@@ -41,6 +43,8 @@ Some dependencies are available for installation via OS-native packages.
   * on DEB-based systems (Debian, Ubuntu, etc):
 
     apt install pelican python3-icalendar python3-html2text
+
+### Building from source
 
 Pelican uses PDM (Python Dependency Manager) for builds and Ruff as its linter. So the Pelican-Events plugin does too. PDM determines the project's dependencies with the command
 
