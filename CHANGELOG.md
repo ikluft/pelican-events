@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
-- add newline to generated version.py to silence lint warning
+- fix generated version.py with newline and double-quotes to silence lint warning
 
 ## [0.1.2] - 2025-10-15
 ### Fixed

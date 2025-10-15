@@ -38,7 +38,7 @@ build-backend = "pdm.backend"
 source = "call"
 getter = "_get_version:get_version"
 write_to = "pelican/plugins/pelican_events/version.py"
-write_template = "__version__ = '{}'\n"
+write_template = "__version__ = \"{}\"\n"
 
 [project.urls]
 "Homepage" = "https://github.com/ikluft/pelican-events"
