@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Pelican Events version number getter for PDM - call configured from pyproject.toml."""
 
 from changelogmanager.change_types import (
@@ -14,3 +15,7 @@ def get_version() -> str:
     if UNRELEASED_ENTRY in changelog.get():
         return str(changelog.suggest_future_version())
     return str(changelog.version())
+
+
+if __name__ == "__main__":
+    print(get_version())  # noqa: T201
