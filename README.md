@@ -11,9 +11,22 @@ This project was created for the [Portland Linux Kernel Meetup (PDX-LKMU)](https
 
 This plugin/module was made to generate iCalendar data for the Linux Kernel Meetup in Portland, Oregon and also to be general-use for other groups who find it helpful. The PDX-LKMU site uses the static site generator Pelican.
 
-We intended to use the previously-existing "events" plugin to automatically generate iCalendar entries from events with calendar metadata. But the events plugin was unmaintained. It also didn't generate enough iCalendar properties for our needs, where we need the Portland-area Calagator system to process our iCalendar output. Also, the original events plugin was so old it didn't implement the current "namespace plugin" standard for Pelican plugins, namely being a standalone Python module. That's what this project was intended to solve - rewrite it as a Python module and bring it up to current plugin standards.
+We intended to use the previously-existing "events" plugin from 2015 to automatically generate iCalendar entries from events with calendar metadata. But the events plugin was unmaintained. It also didn't support enough iCalendar properties for our needs, where we need the Portland-area Calagator tech events calendar site to process our iCalendar output. Also, the original events plugin was so old it didn't implement the current "namespace plugin" standard for Pelican plugins, being a standalone Python module. That's what this project was intended to solve - rewrite it as a Python module and bring it up to current plugin standards. As part of the process, time zones are now handled correctly too.
 
-Let's give credit to the volunteers who created the foundation this is built upon. This plugin pulls together code from the legacy [events plugin by Federico Ceratto](https://github.com/getpelican/pelican-plugins/tree/master/events) and the forked [pelican-events-plugin by Makerspace Esslingen](https://github.com/Makerspace-Esslingen/pelican-events-plugin) into a plugin compliant with the current [namespace plugin structure](https://docs.getpelican.com/en/latest/plugins.html#namespace-plugin-structure). We also added support for more iCalendar properties, as many as make sense in a public setting. A security review excluded some properties which are intended for private email use, and could cause misconfiguration or be used for mischief. Those details are documented below.
+Contents
+--------
+
+* <a href="installation">Installation</a>
+  * <a href="dependencies">Dependencies</a>
+  * <a href="building_from_source">Building from source</a>
+  * <a href="settings">Settings</a>
+* <a href="usage">Usage</a>
+  * <a href="icalendar_property_support">iCalendar property support</a>
+  * <a href="Example_usage">Example usage</a>
+* <a href="Contributing">Contributing</a>
+  * <a href="development_environment">Development Environment</a>
+* <a href="license">License</a>
+* <a href="credits">Credits</a>
 
 Installation
 ------------
@@ -93,6 +106,8 @@ Note 1: To specify the event duration, use a number followed by a time unit, for
   * m: minutes
   * s: seconds
 
+### iCalendar property support
+
 Support for more iCalendar properties, prefixed with "event-" in the post metadata, were added in the update for the Portland Linux Kernel Meetup.
 
   * event-categories: comma-separated list of arbitrary categories [[RFC5545, Section 3.8.1.2](https://www.rfc-editor.org/rfc/rfc5545#section-3.8.1.2), [RFC7986, Section 5.6](https://www.rfc-editor.org/rfc/rfc7986#section-5.6)]
@@ -116,6 +131,10 @@ Support for more iCalendar properties, prefixed with "event-" in the post metada
 However, not all iCalendar properties make sense in the context of a public post. Those intended for private emails were excluded in a security review to prevent misconfiguration and mischief. A few were disallowed because they are redundant with metadata settings that generate those properties in the original events plugin. If you think you need a property which was excluded, [submit an issue to the project](https://github.com/ikluft/pelican-events/issues) stating which property is requested and explaining why it should be allowed in a public setting.
 
 The disallowed iCalendar properties are: *acknowledged action attach attendee busytype calendar-address calscale class color completed contact dtend dtstamp dtstart due duration exdate exrule freebusy last-modified location-type method organizer participant-type percent-complete priority prodid proximity rdate recurrence-id refresh-interval related-to repeat request-status resources resource-type rrule sequence source structured-data transp trigger tzid tzid-alias-of tzname tzoffsetfrom tzoffsetto tzuntil tzurl version xml*
+
+### Example usage
+
+The pelican-events plugin was made for and is used by the [Portland Linux Kernel Meetup](https://ikluft.github.io/pdx-lkmu/) in Portland, Oregon, USA.
 
 Contributing
 ------------
@@ -147,12 +166,11 @@ To make a local git hook to perform these checks before each commit, make a symb
 
     ln -s "../../docs/pre-commit-git-hook.sh" .git/hooks/pre-commit
 
-Example usage
--------------
-
-The pelican-events plugin was made for and is used by the [Portland Linux Kernel Meetup](https://ikluft.github.io/pdx-lkmu/) in Portland, Oregon, USA.
-
 License
 -------
 
 This project is licensed under the AGPL-3.0 license in order to be compatible with Pelican.
+
+Credits
+-------
+Let's give credit to the volunteers who created the foundation this is built upon. This plugin pulls together code from the legacy [events plugin by Federico Ceratto](https://github.com/getpelican/pelican-plugins/tree/master/events) and the forked [pelican-events-plugin by Makerspace Esslingen](https://github.com/Makerspace-Esslingen/pelican-events-plugin) into a plugin compliant with the current [namespace plugin structure](https://docs.getpelican.com/en/latest/plugins.html#namespace-plugin-structure). We also added support for more iCalendar properties, as many as make sense in a public setting. A security review excluded some properties which are intended for private email use, and could cause misconfiguration or be used for mischief. Those details are documented above.
