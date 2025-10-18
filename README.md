@@ -16,26 +16,26 @@ We intended to use the previously-existing "events" plugin from 2015 to automati
 Contents
 --------
 
-* <a href="installation">Installation</a>
-  * <a href="dependencies">Dependencies</a>
-  * <a href="building_from_source">Building from source</a>
-  * <a href="settings">Settings</a>
-* <a href="usage">Usage</a>
-  * <a href="icalendar_property_support">iCalendar property support</a>
-  * <a href="Example_usage">Example usage</a>
-* <a href="Contributing">Contributing</a>
-  * <a href="development_environment">Development Environment</a>
-* <a href="license">License</a>
-* <a href="credits">Credits</a>
+* <a href="#installation">Installation</a>
+  * <a href="#dependencies">Dependencies</a>
+  * <a href="#building_from_source">Building from source</a>
+  * <a href="#settings">Settings</a>
+* <a href="#usage">Usage</a>
+  * <a href="#icalendar_property_support">iCalendar property support</a>
+  * <a href="#example_usage">Example usage</a>
+* <a href="#contributing">Contributing</a>
+  * <a href="#development_environment">Development Environment</a>
+* <a href="#license">License</a>
+* <a href="#credits">Credits</a>
 
-Installation
+<a name="installation">Installation</a>
 ------------
 
 This plugin is available as ['pelican-events' on PyPI](https://pypi.org/project/pelican-events/) and can be installed via:
 
     python -m pip install pelican-events
 
-### Dependencies
+### <a name="dependencies">Dependencies</a>
 
 Whether installing from PyPI with pip, or building from source, you may install dependencies from OS packages if you prefer. But you will have to do that first.
 
@@ -57,7 +57,7 @@ Some dependencies are available for installation via OS-native packages.
 
     apt install pelican python3-icalendar python3-html2text
 
-### Building from source
+### <a name="building_from_source">Building from source</a>
 
 Pelican uses PDM (Python Dependency Manager) for builds and Ruff as its linter. So the Pelican-Events plugin does too. PDM determines the project's dependencies with the command
 
@@ -67,7 +67,7 @@ Dependencies which aren't available as OS-native packages may be installed via P
 
     pdm install
 
-### Settings
+### <a name="settings">Settings</a>
 
 As long as you have not explicitly added a `PLUGINS` setting to your Pelican settings file, then the newly-installed plugin should be detected as a Python module with a "pelican.plugins" prefix, and then automatically enabled. Otherwise, you must add `pelican-events` to your existing `PLUGINS` list. For more information, please see the [How to Use Plugins](https://docs.getpelican.com/en/latest/plugins.html#how-to-use-plugins) documentation.
 
@@ -88,7 +88,7 @@ Settings available in the PLUGIN_EVENTS dictionary variable:
 Settings used from Pelican's top-level configuration:
   * TIMEZONE: time zone to use for events in icalendar output, default: UTC. If set, this must be an official time zone name from the [IANA Time Zone Database](https://www.iana.org/time-zones).
 
-Usage
+<a name="usage">Usage</a>
 -----
 
 You can use the following metadata in your Pelican content, which are from the original 2015 events plugin:
@@ -106,7 +106,7 @@ Note 1: To specify the event duration, use a number followed by a time unit, for
   * m: minutes
   * s: seconds
 
-### iCalendar property support
+### <a name="icalendar_property_support">iCalendar property support</a>
 
 Support for more iCalendar properties, prefixed with "event-" in the post metadata, were added in the update for the Portland Linux Kernel Meetup.
 
@@ -132,11 +132,11 @@ However, not all iCalendar properties make sense in the context of a public post
 
 The disallowed iCalendar properties are: *acknowledged action attach attendee busytype calendar-address calscale class color completed contact dtend dtstamp dtstart due duration exdate exrule freebusy last-modified location-type method organizer participant-type percent-complete priority prodid proximity rdate recurrence-id refresh-interval related-to repeat request-status resources resource-type rrule sequence source structured-data transp trigger tzid tzid-alias-of tzname tzoffsetfrom tzoffsetto tzuntil tzurl version xml*
 
-### Example usage
+### <a name="example_usage">Example usage</a>
 
 The pelican-events plugin was made for and is used by the [Portland Linux Kernel Meetup](https://ikluft.github.io/pdx-lkmu/) in Portland, Oregon, USA.
 
-Contributing
+<a name="contributing">Contributing</a>
 ------------
 
 Contributions are welcome and much appreciated. Every little bit helps. You can contribute by improving the documentation, adding missing features, and fixing bugs. You can also help out by reviewing and commenting on [existing issues][].
@@ -146,7 +146,7 @@ To start contributing to this plugin, review the [Contributing to Pelican][] doc
 [existing issues]: https://github.com/ikluft/pelican-events/issues
 [Contributing to Pelican]: https://docs.getpelican.com/en/latest/contribute.html
 
-### Development Environment
+### <a name="development_environment">Development Environment</a>
 
 Upon commit to the repository, the Github workflow will perform unit tests on current versions of Python.
 So prior to checking in code, at least run the tests on your local environment to make sure you won't break the build.
@@ -166,11 +166,11 @@ To make a local git hook to perform these checks before each commit, make a symb
 
     ln -s "../../docs/pre-commit-git-hook.sh" .git/hooks/pre-commit
 
-License
+<a name="license">License</a>
 -------
 
 This project is licensed under the AGPL-3.0 license in order to be compatible with Pelican.
 
-Credits
+<a name="credits">Credits</a>
 -------
 Let's give credit to the volunteers who created the foundation this is built upon. This plugin pulls together code from the legacy [events plugin by Federico Ceratto](https://github.com/getpelican/pelican-plugins/tree/master/events) and the forked [pelican-events-plugin by Makerspace Esslingen](https://github.com/Makerspace-Esslingen/pelican-events-plugin) into a plugin compliant with the current [namespace plugin structure](https://docs.getpelican.com/en/latest/plugins.html#namespace-plugin-structure). We also added support for more iCalendar properties, as many as make sense in a public setting. A security review excluded some properties which are intended for private email use, and could cause misconfiguration or be used for mischief. Those details are documented above.
