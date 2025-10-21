@@ -91,7 +91,9 @@ Settings used from Pelican's top-level configuration:
 <a name="usage">Usage</a>
 -----
 
-You can use the following metadata in your Pelican content, which are from the original 2015 events plugin:
+See Pelican's [How to Use Plugins](https://docs.getpelican.com/en/latest/plugins.html#how-to-use-plugins) documentation to get a Pelican site started.
+
+You can use the following metadata (headers above the article text) in articles in your Pelican content, which are from the original 2015 events plugin:
 
   * event-start: When the event will start in "YYYY-MM-DD hh:mm"
   * event-end: When the event will stop in "YYYY-MM-DD hh:mm"
