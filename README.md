@@ -25,6 +25,7 @@ Contents
   * <a href="#example_usage">Example usage</a>
 * <a href="#contributing">Contributing</a>
   * <a href="#development_environment">Development Environment</a>
+  * <a href="#changelog_based_versioning">Changelog-based versioning</a>
 * <a href="#license">License</a>
 * <a href="#credits">Credits</a>
 
@@ -168,7 +169,7 @@ To make a local git hook to perform these checks before each commit, make a symb
 
     ln -s "../../docs/pre-commit-git-hook.sh" .git/hooks/pre-commit
 
-### <a name="changelog-based-versioning">Changelog-based versioning</a>
+### <a name="changelog_based_versioning">Changelog-based versioning</a>
 
 The [CHANGELOG.md](CHANGELOG.md) file uses the [Keep a Changelog](https://keepachangelog.com/) format to select the next version number.
 Version numbers follow [Semantic Versioning](https://semver.org/).
