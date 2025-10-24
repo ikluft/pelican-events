@@ -168,6 +168,36 @@ To make a local git hook to perform these checks before each commit, make a symb
 
     ln -s "../../docs/pre-commit-git-hook.sh" .git/hooks/pre-commit
 
+### <a name="changelog-based-versioning">Changelog-based versioning</a>
+
+The [CHANGELOG.md](CHANGELOG.md) file uses the [Keep a Changelog](https://keepachangelog.com/) format to select the next version number.
+Version numbers follow [Semantic Versioning](https://semver.org/).
+The version numbers are strings containing 3 integer numbers indicating major, minor and patch versions, such as "1.0.2".
+
+When adding an entry to CHANGELOG.md, you can carefully edit the file making sure to follow the Keep A Changelog format. Or use the "changelogmanager" command, from the Python package [keepachangelog-manager](https://pypi.org/project/keepachangelog-manager/). Use "changelogmanager add --help" for usage. Here's an example:
+
+    changelogmanager add --change-type added --message "description of new feature that was added"
+
+If the changelog didn't already have an "unreleased" section, this will create it to file the new change under it. Upon the next release, the unreleased section will be renamed with the new version number.
+
+Keep in mind that the type of change affects how the version number will be increased.
+
+* The major number is incremented by changes of type "removed"
+* The minor number is incremented by changes of type "added" or "security"
+* The patch number is incremented by changes of type "changed", "deprecated" or "fixed"
+
+A changelog update for release is done with the command:
+
+    changelogmanager release
+
+It is possible to override the new version number in a release with this command (fill in the relevant numbers for major, minor and patch):
+
+    changelogmanager release --override-version "major.minor.patch"
+
+Use "pdm release" to publish the new version with updated changelog to PyPI.
+
+Use of changelogmanager's "github-release" feature is awaiting a fix that allows the changelog release update to happen before running it. We have to do the PyPI release first.
+
 <a name="license">License</a>
 -------
 
