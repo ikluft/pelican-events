@@ -149,6 +149,8 @@ To start contributing to this plugin, review the [Contributing to Pelican][] doc
 [existing issues]: https://github.com/ikluft/pelican-events/issues
 [Contributing to Pelican]: https://docs.getpelican.com/en/latest/contribute.html
 
+You'll need to make your own copy of pelican-events in a Git workspace.
+
 ### <a name="development_environment">Development Environment</a>
 
 Upon commit to the repository, the Github workflow will perform unit tests on current versions of Python.
