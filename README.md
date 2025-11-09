@@ -193,7 +193,7 @@ A changelog update for release is done with the command:
 
     changelogmanager release
 
-It is possible to override the new version number in a release with this command (fill in the relevant numbers for major, minor and patch):
+It is possible to override the new version number in a release. That's a decision which should not be made unilaterally by one developer, except when there is only one. It can be done with this command (fill in the relevant numbers for major, minor and patch):
 
     changelogmanager release --override-version "major.minor.patch"
 
