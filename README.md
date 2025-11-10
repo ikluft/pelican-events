@@ -60,7 +60,13 @@ Some dependencies are available for installation via OS-native packages.
 
 ### <a name="building_from_source">Building from source</a>
 
-Pelican uses PDM (Python Dependency Manager) for builds and Ruff as its linter. So the Pelican-Events plugin does too. PDM determines the project's dependencies with the command
+Pelican uses [PDM (Python Dependency Manager)](https://pdm-project.org/) for builds and [Ruff](https://docs.astral.sh/ruff/) as its formatter and linter. So the Pelican-Events plugin does too.
+
+PDM can use the ["uv" package installer](https://docs.astral.sh/uv/) if you have it installed. Use this command to enable it.
+
+    pdm config use_uv true
+
+PDM determines the project's dependencies with the command
 
     pdm lock
 
